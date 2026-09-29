@@ -38,6 +38,54 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_insights: {
+        Row: {
+          action: string | null
+          batch_at: string
+          created_at: string
+          finding: string
+          id: string
+          impact: string | null
+          kind: string
+          metric: string | null
+          severity: string
+          snoozed_until: string | null
+          status: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          action?: string | null
+          batch_at?: string
+          created_at?: string
+          finding: string
+          id?: string
+          impact?: string | null
+          kind: string
+          metric?: string | null
+          severity?: string
+          snoozed_until?: string | null
+          status?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          action?: string | null
+          batch_at?: string
+          created_at?: string
+          finding?: string
+          id?: string
+          impact?: string | null
+          kind?: string
+          metric?: string | null
+          severity?: string
+          snoozed_until?: string | null
+          status?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       cash_flows: {
         Row: {
           category: string
@@ -158,6 +206,81 @@ export type Database = {
         }
         Relationships: []
       }
+      goals: {
+        Row: {
+          created_at: string
+          currency: string
+          current_saved: number
+          id: string
+          monthly_contribution: number
+          name: string
+          priority: number
+          target_amount: number
+          target_year: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          current_saved?: number
+          id?: string
+          monthly_contribution?: number
+          name: string
+          priority?: number
+          target_amount?: number
+          target_year: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          current_saved?: number
+          id?: string
+          monthly_contribution?: number
+          name?: string
+          priority?: number
+          target_amount?: number
+          target_year?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      investment_ideas: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          notes: string | null
+          review: Json | null
+          reviewed_at: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          notes?: string | null
+          review?: Json | null
+          reviewed_at?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          notes?: string | null
+          review?: Json | null
+          reviewed_at?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       investments: {
         Row: {
           asset_class: string
@@ -197,17 +320,81 @@ export type Database = {
         }
         Relationships: []
       }
+      lump_costs: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          label: string
+          months: number[]
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          label: string
+          months?: number[]
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          label?: string
+          months?: number[]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      monthly_reviews: {
+        Row: {
+          created_at: string
+          id: string
+          net_worth: number | null
+          period: string
+          report: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          net_worth?: number | null
+          period: string
+          report: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          net_worth?: number | null
+          period?: string
+          report?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           age: number | null
           base_currency: string
           created_at: string
+          education_inflation: number
+          emergency_fund: number
           full_name: string | null
+          fx_depreciation: number
           goals: string | null
+          health_cover: number
           id: string
+          income_stability: string
           inflation_rate: number
+          life_cover: number
           retirement_age: number | null
           risk_tolerance: string
+          salary_growth: number
           updated_at: string
           usd_ngn_rate: number
         }
@@ -215,12 +402,19 @@ export type Database = {
           age?: number | null
           base_currency?: string
           created_at?: string
+          education_inflation?: number
+          emergency_fund?: number
           full_name?: string | null
+          fx_depreciation?: number
           goals?: string | null
+          health_cover?: number
           id: string
+          income_stability?: string
           inflation_rate?: number
+          life_cover?: number
           retirement_age?: number | null
           risk_tolerance?: string
+          salary_growth?: number
           updated_at?: string
           usd_ngn_rate?: number
         }
@@ -228,12 +422,19 @@ export type Database = {
           age?: number | null
           base_currency?: string
           created_at?: string
+          education_inflation?: number
+          emergency_fund?: number
           full_name?: string | null
+          fx_depreciation?: number
           goals?: string | null
+          health_cover?: number
           id?: string
+          income_stability?: string
           inflation_rate?: number
+          life_cover?: number
           retirement_age?: number | null
           risk_tolerance?: string
+          salary_growth?: number
           updated_at?: string
           usd_ngn_rate?: number
         }
