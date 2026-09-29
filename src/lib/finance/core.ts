@@ -10,6 +10,13 @@ export interface Profile {
   inflation_rate: number;
   risk_tolerance: string;
   goals: string | null;
+  fx_depreciation?: number;
+  education_inflation?: number;
+  salary_growth?: number;
+  income_stability?: string;
+  life_cover?: number;
+  health_cover?: number;
+  emergency_fund?: number;
 }
 
 export interface Debt {
@@ -54,7 +61,29 @@ export interface FamilyMember {
   currency: string;
 }
 
+export interface Goal {
+  id: string;
+  name: string;
+  target_amount: number;
+  currency: string;
+  target_year: number;
+  current_saved: number;
+  monthly_contribution: number;
+  priority: number;
+}
+
+export interface LumpCost {
+  id: string;
+  label: string;
+  amount: number;
+  currency: string;
+  /** 1-12 calendar months in which this cost is due each year */
+  months: number[];
+}
+
 export interface FinanceData {
+  goals?: Goal[];
+  lumps?: LumpCost[];
   profile: Profile | null;
   debts: Debt[];
   investments: Investment[];
