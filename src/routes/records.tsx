@@ -51,7 +51,7 @@ function Records() {
 
   if (isLoading) return <p className="text-muted-foreground">Loading your numbers…</p>;
   if (error) return <p className="text-destructive">Could not load data: {error.message}</p>;
-  if (!data) return null;
+  if (!data || !user) return null;
 
   const cur = data.profile?.base_currency ?? "NGN";
 
@@ -79,9 +79,9 @@ function Records() {
         <TabsContent value="family">
           <Section
             table="family_members"
-            userId={user!.id}
-            rows={data.family.map((r) => ({ ...r, dependent: r.dependent ? "true" : "false" })) as unknown as Draft[]}
-            defaults={{ name: "", relationship: "child", age: 5, dependent: "true", monthly_cost: 0, currency: cur }}
+            userId={user.id}
+            rows={data.family as unknown as Draft[]}
+            defaults={{ name: "", relationship: "child", age: 5, dependent: true, monthly_cost: 0, currency: cur }}
             fields={[
               { key: "name", label: "Name" },
               { key: "relationship", label: "Relationship", select: ["spouse", "child", "parent", "other"] },
@@ -90,14 +90,14 @@ function Records() {
               { key: "monthly_cost", label: "Monthly cost", num: true },
               { key: "currency", label: "Currency", select: CURRENCIES },
             ]}
-            title={(r) => String(r.name) || "New member"}
+            title={(r) => String(r["name"]) || "New member"}
             emptyText="No family members added yet."
           />
         </TabsContent>
         <TabsContent value="flows">
           <Section
             table="cash_flows"
-            userId={user!.id}
+            userId={user.id}
             rows={data.flows as unknown as Draft[]}
             defaults={{ label: "", flow_type: "income", category: "Salary", monthly_amount: 0, currency: cur, growth_rate: 0 }}
             fields={[
@@ -108,14 +108,14 @@ function Records() {
               { key: "currency", label: "Currency", select: CURRENCIES },
               { key: "growth_rate", label: "Annual growth %", num: true },
             ]}
-            title={(r) => String(r.label) || "New flow"}
+            title={(r) => String(r["label"]) || "New flow"}
             emptyText="No income or expenses added yet."
           />
         </TabsContent>
         <TabsContent value="debts">
           <Section
             table="debts"
-            userId={user!.id}
+            userId={user.id}
             rows={data.debts as unknown as Draft[]}
             defaults={{ name: "", kind: "personal loan", balance: 0, currency: cur, interest_rate: 20, minimum_payment: 0, notes: null }}
             fields={[
@@ -131,14 +131,14 @@ function Records() {
               { key: "minimum_payment", label: "Minimum monthly payment", num: true },
               { key: "notes", label: "Notes", area: true },
             ]}
-            title={(r) => String(r.name) || "New debt"}
+            title={(r) => String(r["name"]) || "New debt"}
             emptyText="No debts added yet."
           />
         </TabsContent>
         <TabsContent value="investments">
           <Section
             table="investments"
-            userId={user!.id}
+            userId={user.id}
             rows={data.investments as unknown as Draft[]}
             defaults={{ name: "", asset_class: "stocks", current_value: 0, currency: cur, monthly_contribution: 0, expected_return: 8, notes: null }}
             fields={[
@@ -154,7 +154,7 @@ function Records() {
               { key: "expected_return", label: "Expected return %/yr", num: true },
               { key: "notes", label: "Notes", area: true },
             ]}
-            title={(r) => String(r.name) || "New investment"}
+            title={(r) => String(r["name"]) || "New investment"}
             emptyText="No investments added yet."
           />
         </TabsContent>
@@ -189,20 +189,20 @@ function ProfileSection({ data }: { data: NonNullable<ReturnType<typeof useFinan
       </div>
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
         <Field label="Full name">
-          <Input value={String(form.full_name ?? "")} onChange={(e) => set("full_name", e.target.value)} />
+          <Input value={String(form["full_name"] ?? "")} onChange={(e) => set("full_name", e.target.value)} />
         </Field>
         <Field label="Current age">
-          <Input type="number" value={String(form.age ?? "")} onChange={(e) => set("age", Number(e.target.value))} />
+          <Input type="number" value={String(form["age"] ?? "")} onChange={(e) => set("age", Number(e.target.value))} />
         </Field>
         <Field label="Planned retirement age">
           <Input
             type="number"
-            value={String(form.retirement_age ?? "")}
+            value={String(form["retirement_age"] ?? "")}
             onChange={(e) => set("retirement_age", Number(e.target.value))}
           />
         </Field>
         <Field label="Base currency">
-          <Select value={String(form.base_currency)} onValueChange={(v) => set("base_currency", v)}>
+          <Select value={String(form["base_currency"])} onValueChange={(v) => set("base_currency", v)}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -218,19 +218,19 @@ function ProfileSection({ data }: { data: NonNullable<ReturnType<typeof useFinan
         <Field label="Exchange rate (₦ per $1)">
           <Input
             type="number"
-            value={String(form.usd_ngn_rate ?? "")}
+            value={String(form["usd_ngn_rate"] ?? "")}
             onChange={(e) => set("usd_ngn_rate", Number(e.target.value))}
           />
         </Field>
         <Field label="Expected inflation %/yr">
           <Input
             type="number"
-            value={String(form.inflation_rate ?? "")}
+            value={String(form["inflation_rate"] ?? "")}
             onChange={(e) => set("inflation_rate", Number(e.target.value))}
           />
         </Field>
         <Field label="Risk tolerance">
-          <Select value={String(form.risk_tolerance)} onValueChange={(v) => set("risk_tolerance", v)}>
+          <Select value={String(form["risk_tolerance"])} onValueChange={(v) => set("risk_tolerance", v)}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -244,7 +244,7 @@ function ProfileSection({ data }: { data: NonNullable<ReturnType<typeof useFinan
         <Field label="My goals">
           <Textarea
             className="min-h-24"
-            value={String(form.goals ?? "")}
+            value={String(form["goals"] ?? "")}
             onChange={(e) => set("goals", e.target.value)}
             placeholder="e.g. Buy a house in 5 years, children's university fees, retire comfortably"
           />
@@ -287,14 +287,14 @@ function Section({
   const [adding, setAdding] = useState(false);
   const [newRow, setNewRow] = useState<Draft>(defaults);
 
-  const cur = defaults.currency as string;
+  const cur = defaults["currency"] as string;
 
   return (
     <section className="space-y-4">
       {rows.length === 0 && !adding && <p className="text-muted-foreground">{emptyText}</p>}
 
       {rows.map((row) => (
-        <RowCard key={String(row.id)} row={row} fields={fields} table={table} upsert={upsert} del={del} title={title} />
+        <RowCard key={String(row["id"])} row={row} fields={fields} table={table} upsert={upsert} del={del} title={title} />
       ))}
 
       {adding && (
@@ -351,12 +351,12 @@ function RowCard({
           >
             <Save className="size-4" /> Save
           </Button>
-          <Button size="sm" variant="ghost" className="text-destructive" onClick={() => del.mutate(String(row.id))} disabled={del.isPending}>
+          <Button size="sm" variant="ghost" className="text-destructive" onClick={() => del.mutate(String(row["id"]))} disabled={del.isPending}>
             <Trash2 className="size-4" />
           </Button>
         </div>
       </div>
-      <FieldGrid fields={fields} form={form} set={set} defaultCurrency={String(row.currency ?? "NGN")} />
+      <FieldGrid fields={fields} form={form} set={set} defaultCurrency={String(row["currency"] ?? "NGN")} />
       {table === "cash_flows" && null}
     </article>
   );
@@ -376,9 +376,9 @@ function FieldGrid({
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {fields.map((f) => (
-        <Field key={f.key} label={f.label} className={f.area ? "sm:col-span-2 lg:col-span-3" : undefined}>
+        <Field key={f.key} label={f.label} {...(f.area ? { className: "sm:col-span-2 lg:col-span-3" } : {})}>
           {f.bool ? (
-            <Switch checked={form[f.key] === "true" || form[f.key] === true} onCheckedChange={(v) => set(f.key, v ? "true" : "false")} />
+            <Switch checked={form[f.key] === true} onCheckedChange={(v) => set(f.key, v)} />
           ) : f.select ? (
             <Select value={String(form[f.key] ?? defaultCurrency)} onValueChange={(v) => set(f.key, v)}>
               <SelectTrigger className="w-full">
