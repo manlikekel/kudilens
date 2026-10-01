@@ -7,16 +7,37 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Disclaimer, InlineChart, type ChartSpec } from "@/components/kudi";
+
+function KudiMarkdown({ text }: { text: string }) {
+  const parts = text.split(/```chart\s*([\s\S]*?)```/g);
+  return (
+    <>
+      {parts.map((p, i) => {
+        if (i % 2 === 1) {
+          try {
+            return <InlineChart key={i} spec={JSON.parse(p) as ChartSpec} />;
+          } catch {
+            return null;
+          }
+        }
+        // hide a half-streamed chart block
+        const clean = p.replace(/```chart[\s\S]*$/, "");
+        return clean.trim() ? <ReactMarkdown key={i}>{clean}</ReactMarkdown> : null;
+      })}
+    </>
+  );
+}
 
 export const Route = createFileRoute("/advisor")({
   head: () => ({
     meta: [
-      { title: "AI money advisor — LedgerIQ" },
+      { title: "Ask Kudi — KudiLens" },
       {
         name: "description",
         content: "Ask an AI analyst about your debts, investments and family finances, grounded in your own numbers.",
       },
-      { property: "og:title", content: "AI money advisor — LedgerIQ" },
+      { property: "og:title", content: "Ask Kudi — KudiLens" },
       { property: "og:description", content: "Personal, data-driven financial advice from your own records." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -31,10 +52,10 @@ interface Msg {
 }
 
 const starters = [
-  "Where is my money leaking every month?",
+  "Can I afford a ₦15m car next year?",
+  "Should I roll over my T-bill or put it in a money market fund?",
+  "What happens if I have another child in 2 years?",
   "Should I pay off debt or invest first?",
-  "Am I on track for retirement and my kids' school fees?",
-  "I want to invest in real estate — is it a good idea for me?",
 ];
 
 function AdvisorPage() {
@@ -112,11 +133,23 @@ function Chat() {
 
   return (
     <div className="mx-auto flex h-[calc(100vh-9rem)] max-w-3xl flex-col">
+      <div className="flex gap-2 overflow-x-auto pb-3">
+        {starters.map((s) => (
+          <button
+            key={s}
+            onClick={() => send(s)}
+            disabled={busy}
+            className="shrink-0 rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
+          >
+            {s}
+          </button>
+        ))}
+      </div>
       <div className="flex-1 space-y-6 overflow-y-auto pb-6">
         {messages.length === 0 && (
           <div className="pt-10 text-center">
             <BrainCircuit className="mx-auto size-10 text-primary" />
-            <h1 className="mt-4 text-2xl font-semibold">Your money analyst</h1>
+            <h1 className="mt-4 text-2xl font-semibold">Ask Kudi</h1>
             <p className="mt-2 text-muted-foreground">
               I read everything in “My numbers” before answering. Ask anything.
             </p>
@@ -145,7 +178,7 @@ function Chat() {
               <BrainCircuit className="mt-1 size-5 shrink-0 text-primary" />
               <div className="prose prose-invert prose-sm min-w-0 max-w-none text-foreground [&_li]:my-0.5 [&_h3]:mt-3 [&_strong]:text-foreground">
                 {m.content ? (
-                  <ReactMarkdown>{m.content}</ReactMarkdown>
+                  <KudiMarkdown text={m.content} />
                 ) : (
                   <span className="animate-pulse text-muted-foreground">Analysing your numbers…</span>
                 )}
@@ -180,6 +213,9 @@ function Chat() {
           <ArrowUp className="size-4" />
         </Button>
       </form>
+      <div className="pt-2 text-center">
+        <Disclaimer />
+      </div>
     </div>
   );
 }
