@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdvisorRouteImport } from './routes/advisor'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as PlanRouteImport } from './routes/plan'
 import { Route as RecordsRouteImport } from './routes/records'
 import { Route as ApiAdvisorRouteImport } from './routes/api/advisor'
 import { Route as ApiIdeasRouteImport } from './routes/api/ideas'
@@ -31,6 +32,11 @@ const AdvisorRoute = AdvisorRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlanRoute = PlanRouteImport.update({
+  id: '/plan',
+  path: '/plan',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecordsRoute = RecordsRouteImport.update({
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/advisor': typeof AdvisorRoute
   '/auth': typeof AuthRoute
+  '/plan': typeof PlanRoute
   '/records': typeof RecordsRoute
   '/api/advisor': typeof ApiAdvisorRoute
   '/api/ideas': typeof ApiIdeasRoute
@@ -73,6 +80,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/advisor': typeof AdvisorRoute
   '/auth': typeof AuthRoute
+  '/plan': typeof PlanRoute
   '/records': typeof RecordsRoute
   '/api/advisor': typeof ApiAdvisorRoute
   '/api/ideas': typeof ApiIdeasRoute
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/advisor': typeof AdvisorRoute
   '/auth': typeof AuthRoute
+  '/plan': typeof PlanRoute
   '/records': typeof RecordsRoute
   '/api/advisor': typeof ApiAdvisorRoute
   '/api/ideas': typeof ApiIdeasRoute
@@ -96,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/advisor'
     | '/auth'
+    | '/plan'
     | '/records'
     | '/api/advisor'
     | '/api/ideas'
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/advisor'
     | '/auth'
+    | '/plan'
     | '/records'
     | '/api/advisor'
     | '/api/ideas'
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/'
     | '/advisor'
     | '/auth'
+    | '/plan'
     | '/records'
     | '/api/advisor'
     | '/api/ideas'
@@ -127,6 +139,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdvisorRoute: typeof AdvisorRoute
   AuthRoute: typeof AuthRoute
+  PlanRoute: typeof PlanRoute
   RecordsRoute: typeof RecordsRoute
   ApiAdvisorRoute: typeof ApiAdvisorRoute
   ApiIdeasRoute: typeof ApiIdeasRoute
@@ -155,6 +168,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/plan': {
+      id: '/plan'
+      path: '/plan'
+      fullPath: '/plan'
+      preLoaderRoute: typeof PlanRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/records': {
@@ -199,6 +219,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdvisorRoute: AdvisorRoute,
   AuthRoute: AuthRoute,
+  PlanRoute: PlanRoute,
   RecordsRoute: RecordsRoute,
   ApiAdvisorRoute: ApiAdvisorRoute,
   ApiIdeasRoute: ApiIdeasRoute,
