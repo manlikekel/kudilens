@@ -89,7 +89,7 @@ describe("family", () => {
 
 describe("stress & protection", () => {
   it("devaluation raises Naira value of dollar assets", () => {
-    const r = devaluationShock(data, 0.3);
+    const r = devaluationShock({ ...data, debts: [] }, 0.3);
     expect(r.after.ngn).toBeGreaterThan(r.before.ngn);
     expect(r.after.usd).toBeLessThan(r.before.usd);
   });

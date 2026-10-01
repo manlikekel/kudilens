@@ -12,8 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdvisorRouteImport } from './routes/advisor'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as PlanRouteImport } from './routes/plan'
 import { Route as RecordsRouteImport } from './routes/records'
 import { Route as ApiAdvisorRouteImport } from './routes/api/advisor'
+import { Route as ApiIdeasRouteImport } from './routes/api/ideas'
+import { Route as ApiInsightsRouteImport } from './routes/api/insights'
+import { Route as ApiReviewRouteImport } from './routes/api/review'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -30,6 +34,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlanRoute = PlanRouteImport.update({
+  id: '/plan',
+  path: '/plan',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecordsRoute = RecordsRouteImport.update({
   id: '/records',
   path: '/records',
@@ -40,43 +49,102 @@ const ApiAdvisorRoute = ApiAdvisorRouteImport.update({
   path: '/api/advisor',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiIdeasRoute = ApiIdeasRouteImport.update({
+  id: '/api/ideas',
+  path: '/api/ideas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiInsightsRoute = ApiInsightsRouteImport.update({
+  id: '/api/insights',
+  path: '/api/insights',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiReviewRoute = ApiReviewRouteImport.update({
+  id: '/api/review',
+  path: '/api/review',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/advisor': typeof AdvisorRoute
   '/auth': typeof AuthRoute
+  '/plan': typeof PlanRoute
   '/records': typeof RecordsRoute
   '/api/advisor': typeof ApiAdvisorRoute
+  '/api/ideas': typeof ApiIdeasRoute
+  '/api/insights': typeof ApiInsightsRoute
+  '/api/review': typeof ApiReviewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/advisor': typeof AdvisorRoute
   '/auth': typeof AuthRoute
+  '/plan': typeof PlanRoute
   '/records': typeof RecordsRoute
   '/api/advisor': typeof ApiAdvisorRoute
+  '/api/ideas': typeof ApiIdeasRoute
+  '/api/insights': typeof ApiInsightsRoute
+  '/api/review': typeof ApiReviewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/advisor': typeof AdvisorRoute
   '/auth': typeof AuthRoute
+  '/plan': typeof PlanRoute
   '/records': typeof RecordsRoute
   '/api/advisor': typeof ApiAdvisorRoute
+  '/api/ideas': typeof ApiIdeasRoute
+  '/api/insights': typeof ApiInsightsRoute
+  '/api/review': typeof ApiReviewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/advisor' | '/auth' | '/records' | '/api/advisor'
+  fullPaths:
+    | '/'
+    | '/advisor'
+    | '/auth'
+    | '/plan'
+    | '/records'
+    | '/api/advisor'
+    | '/api/ideas'
+    | '/api/insights'
+    | '/api/review'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/advisor' | '/auth' | '/records' | '/api/advisor'
-  id: '__root__' | '/' | '/advisor' | '/auth' | '/records' | '/api/advisor'
+  to:
+    | '/'
+    | '/advisor'
+    | '/auth'
+    | '/plan'
+    | '/records'
+    | '/api/advisor'
+    | '/api/ideas'
+    | '/api/insights'
+    | '/api/review'
+  id:
+    | '__root__'
+    | '/'
+    | '/advisor'
+    | '/auth'
+    | '/plan'
+    | '/records'
+    | '/api/advisor'
+    | '/api/ideas'
+    | '/api/insights'
+    | '/api/review'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdvisorRoute: typeof AdvisorRoute
   AuthRoute: typeof AuthRoute
+  PlanRoute: typeof PlanRoute
   RecordsRoute: typeof RecordsRoute
   ApiAdvisorRoute: typeof ApiAdvisorRoute
+  ApiIdeasRoute: typeof ApiIdeasRoute
+  ApiInsightsRoute: typeof ApiInsightsRoute
+  ApiReviewRoute: typeof ApiReviewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -102,6 +170,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/plan': {
+      id: '/plan'
+      path: '/plan'
+      fullPath: '/plan'
+      preLoaderRoute: typeof PlanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/records': {
       id: '/records'
       path: '/records'
@@ -116,6 +191,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdvisorRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/ideas': {
+      id: '/api/ideas'
+      path: '/api/ideas'
+      fullPath: '/api/ideas'
+      preLoaderRoute: typeof ApiIdeasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/insights': {
+      id: '/api/insights'
+      path: '/api/insights'
+      fullPath: '/api/insights'
+      preLoaderRoute: typeof ApiInsightsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/review': {
+      id: '/api/review'
+      path: '/api/review'
+      fullPath: '/api/review'
+      preLoaderRoute: typeof ApiReviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -123,8 +219,12 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdvisorRoute: AdvisorRoute,
   AuthRoute: AuthRoute,
+  PlanRoute: PlanRoute,
   RecordsRoute: RecordsRoute,
   ApiAdvisorRoute: ApiAdvisorRoute,
+  ApiIdeasRoute: ApiIdeasRoute,
+  ApiInsightsRoute: ApiInsightsRoute,
+  ApiReviewRoute: ApiReviewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -3,7 +3,7 @@ import { useState, type ReactNode } from "react";
 import { Plus, Save, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/hooks/useAuth";
-import { useFinance, useUpsertRow, useDeleteRow, useSaveProfile } from "@/lib/useFinance";
+import { type TableName, useFinance, useUpsertRow, useDeleteRow, useSaveProfile } from "@/lib/useFinance";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -71,6 +71,8 @@ function Records() {
           <TabsTrigger value="flows">Income &amp; spending</TabsTrigger>
           <TabsTrigger value="debts">Debts</TabsTrigger>
           <TabsTrigger value="investments">Investments</TabsTrigger>
+          <TabsTrigger value="goals">Goals</TabsTrigger>
+          <TabsTrigger value="lumps">Yearly costs</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
@@ -158,6 +160,41 @@ function Records() {
             emptyText="No investments added yet."
           />
         </TabsContent>
+        <TabsContent value="goals">
+          <Section
+            table="goals"
+            userId={user.id}
+            rows={(data.goals ?? []) as unknown as Draft[]}
+            defaults={{ name: "", target_amount: 0, currency: cur, target_year: new Date().getFullYear() + 5, current_saved: 0, monthly_contribution: 0, priority: 3 }}
+            fields={[
+              { key: "name", label: "Goal (e.g. Canada relocation, House build)" },
+              { key: "target_amount", label: "Target amount (today's prices)", num: true },
+              { key: "currency", label: "Currency", select: CURRENCIES },
+              { key: "target_year", label: "Target year", num: true },
+              { key: "current_saved", label: "Already saved", num: true },
+              { key: "monthly_contribution", label: "Saving per month", num: true },
+              { key: "priority", label: "Priority (1 = most important)", num: true },
+            ]}
+            title={(r) => String(r["name"]) || "New goal"}
+            emptyText="No goals yet. Add one to see your odds of reaching it."
+          />
+        </TabsContent>
+        <TabsContent value="lumps">
+          <Section
+            table="lump_costs"
+            userId={user.id}
+            rows={(data.lumps ?? []) as unknown as Draft[]}
+            defaults={{ label: "", amount: 0, currency: cur, months: [] as unknown as string }}
+            fields={[
+              { key: "label", label: "Cost (e.g. School fees, Rent renewal, Festive season)" },
+              { key: "amount", label: "Amount each time", num: true },
+              { key: "currency", label: "Currency", select: CURRENCIES },
+              { key: "months", label: "Months due (numbers, e.g. 1, 5, 9)", list: true },
+            ]}
+            title={(r) => String(r["label"]) || "New cost"}
+            emptyText="No once-a-year costs yet — add school fees, rent and festive spending."
+          />
+        </TabsContent>
       </Tabs>
     </div>
   );
@@ -178,6 +215,13 @@ function ProfileSection({ data }: { data: NonNullable<ReturnType<typeof useFinan
     inflation_rate: p?.inflation_rate ?? 25,
     risk_tolerance: p?.risk_tolerance ?? "balanced",
     goals: p?.goals ?? "",
+    fx_depreciation: p?.fx_depreciation ?? 15,
+    education_inflation: p?.education_inflation ?? 20,
+    salary_growth: p?.salary_growth ?? 10,
+    income_stability: p?.income_stability ?? "stable",
+    emergency_fund: p?.emergency_fund ?? 0,
+    life_cover: p?.life_cover ?? 0,
+    health_cover: p?.health_cover ?? 0,
   });
   const set = (k: string, v: Draft[string]) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -241,6 +285,34 @@ function ProfileSection({ data }: { data: NonNullable<ReturnType<typeof useFinan
             </SelectContent>
           </Select>
         </Field>
+        {(
+          [
+            ["fx_depreciation", "Naira loss vs $ per year %"],
+            ["education_inflation", "School fees inflation %/yr"],
+            ["salary_growth", "Salary growth %/yr"],
+            ["emergency_fund", "Emergency fund saved"],
+            ["life_cover", "Life insurance cover"],
+            ["health_cover", "Health insurance cover / yr"],
+          ] as const
+        ).map(([k, label]) => (
+          <Field key={k} label={label}>
+            <Input type="number" value={String(form[k] ?? "")} onChange={(e) => set(k, Number(e.target.value))} />
+          </Field>
+        ))}
+        <Field label="Income stability">
+          <Select value={String(form["income_stability"])} onValueChange={(v) => set("income_stability", v)}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="stable">Stable salary</SelectItem>
+              <SelectItem value="variable">Variable / business / commission</SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
+        <p className="text-xs text-muted-foreground sm:col-span-2">
+          These are your own assumptions, not live market data. The Plan tab uses them for every forecast.
+        </p>
         <Field label="My goals">
           <Textarea
             className="min-h-24"
@@ -263,6 +335,7 @@ interface FieldSpec {
   bool?: boolean;
   area?: boolean;
   select?: string[];
+  list?: boolean;
 }
 
 function Section({
@@ -274,7 +347,7 @@ function Section({
   title,
   emptyText,
 }: {
-  table: "debts" | "investments" | "cash_flows" | "family_members";
+  table: TableName;
   userId: string;
   rows: Draft[];
   fields: FieldSpec[];
@@ -392,6 +465,19 @@ function FieldGrid({
                 ))}
               </SelectContent>
             </Select>
+          ) : f.list ? (
+            <Input
+              defaultValue={Array.isArray(form[f.key]) ? (form[f.key] as unknown as number[]).join(", ") : ""}
+              onChange={(e) =>
+                set(
+                  f.key,
+                  e.target.value
+                    .split(/[ ,]+/)
+                    .map(Number)
+                    .filter((n) => n >= 1 && n <= 12) as unknown as string,
+                )
+              }
+            />
           ) : f.area ? (
             <Textarea className="min-h-16" value={String(form[f.key] ?? "")} onChange={(e) => set(f.key, e.target.value)} />
           ) : f.num ? (

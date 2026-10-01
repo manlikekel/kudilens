@@ -1,16 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
-import { buildInsights, summarize, project, type FinanceData } from "@/lib/finance";
+import { aiSummary } from "@/lib/finance";
+import { KUDI_TONE, loadData } from "@/lib/ai.server";
 
-const SYSTEM = `You are LedgerIQ, a sharp personal-finance data scientist for a user in Nigeria who holds money in NGN and USD.
-You receive the user's full financial snapshot as JSON (profile, family, income/spending, debts, investments), computed summary metrics, rule-based insights, and a 25-year projection.
-- Ground every claim in their numbers; quote figures with currency symbols (₦ or $).
-- Give predictive, quantified insight: payoff timelines, projected balances, "if you change X, Y happens".
-- Prioritise: cash-flow deficits, expensive debt, emergency buffer, children's education, FX/inflation risk, diversification, retirement.
-- Critique their investment ideas honestly (risk, return vs. debt cost, liquidity, currency).
-- Be concise, use short headings and bullet points in markdown. End with 2-3 concrete next actions.
-- You are not a licensed adviser; say so briefly only when recommending specific products.`;
+const SYSTEM = `${KUDI_TONE}
+You are the "Ask Kudi" chat. You receive a compact JSON summary (no household names) with forecasts already computed by the app's finance engine: Monte Carlo net worth percentiles, goal probabilities, debt payoff, emergency fund, health score.
+- Answer affordability and what-if questions with real arithmetic from those numbers; show the key calculation briefly.
+- When a chart helps, include ONE fenced block in this exact format (labels short, values plain numbers in Naira unless stated):
+\`\`\`chart
+{"type":"bar","title":"...","data":[{"label":"Now","value":1000000},{"label":"In 1 yr","value":1500000}]}
+\`\`\`
+  type may be "bar" or "line".
+- Use short headings and bullets in markdown. End with 2–3 concrete next steps.`;
 
 export const Route = createFileRoute("/api/advisor")({
   server: {
@@ -33,12 +35,8 @@ export const Route = createFileRoute("/api/advisor")({
         const message = typeof body?.message === "string" ? body.message.trim().slice(0, 4000) : "";
         if (!message) return new Response("Message required", { status: 400 });
 
-        const [profile, debts, investments, flows, family, history] = await Promise.all([
-          supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
-          supabase.from("debts").select("*").eq("user_id", userId),
-          supabase.from("investments").select("*").eq("user_id", userId),
-          supabase.from("cash_flows").select("*").eq("user_id", userId),
-          supabase.from("family_members").select("*").eq("user_id", userId),
+        const [data, history] = await Promise.all([
+          loadData(supabase, userId),
           supabase
             .from("advisor_messages")
             .select("role, content")
@@ -46,21 +44,7 @@ export const Route = createFileRoute("/api/advisor")({
             .order("created_at", { ascending: true })
             .limit(40),
         ]);
-
-        const data = {
-          profile: profile.data,
-          debts: debts.data ?? [],
-          investments: investments.data ?? [],
-          flows: flows.data ?? [],
-          family: family.data ?? [],
-        } as unknown as FinanceData;
-
-        const snapshot = {
-          data,
-          summary: summarize(data),
-          insights: buildInsights(data),
-          projection: project(data, 25).filter((_, i) => i % 5 === 0),
-        };
+        const snapshot = aiSummary(data);
 
         const { error: insErr } = await supabase
           .from("advisor_messages")
