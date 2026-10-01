@@ -3,7 +3,7 @@ import { useState, type ReactNode } from "react";
 import { Plus, Save, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/hooks/useAuth";
-import { useFinance, useUpsertRow, useDeleteRow, useSaveProfile } from "@/lib/useFinance";
+import { type TableName, useFinance, useUpsertRow, useDeleteRow, useSaveProfile } from "@/lib/useFinance";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -274,7 +274,7 @@ function Section({
   title,
   emptyText,
 }: {
-  table: "debts" | "investments" | "cash_flows" | "family_members";
+  table: TableName;
   userId: string;
   rows: Draft[];
   fields: FieldSpec[];

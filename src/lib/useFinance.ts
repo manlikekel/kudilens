@@ -1,17 +1,19 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { CashFlow, Debt, FamilyMember, FinanceData, Investment, Profile } from "./finance";
+import type { CashFlow, Debt, FamilyMember, FinanceData, Goal, Investment, LumpCost, Profile } from "./finance";
 
 async function loadFinance(userId: string): Promise<FinanceData> {
-  const [profile, debts, investments, flows, family] = await Promise.all([
+  const [profile, debts, investments, flows, family, goals, lumps] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
     supabase.from("debts").select("*").eq("user_id", userId).order("created_at"),
     supabase.from("investments").select("*").eq("user_id", userId).order("created_at"),
     supabase.from("cash_flows").select("*").eq("user_id", userId).order("created_at"),
     supabase.from("family_members").select("*").eq("user_id", userId).order("created_at"),
+    supabase.from("goals").select("*").eq("user_id", userId).order("target_year"),
+    supabase.from("lump_costs").select("*").eq("user_id", userId).order("created_at"),
   ]);
   const err =
-    profile.error || debts.error || investments.error || flows.error || family.error;
+    profile.error || debts.error || investments.error || flows.error || family.error || goals.error || lumps.error;
   if (err) throw new Error(err.message);
   return {
     profile: (profile.data as Profile | null) ?? null,
@@ -19,6 +21,8 @@ async function loadFinance(userId: string): Promise<FinanceData> {
     investments: (investments.data ?? []) as Investment[],
     flows: (flows.data ?? []) as CashFlow[],
     family: (family.data ?? []) as FamilyMember[],
+    goals: (goals.data ?? []) as Goal[],
+    lumps: (lumps.data ?? []) as LumpCost[],
   };
 }
 
@@ -30,7 +34,7 @@ export function useFinance(userId: string | undefined) {
   });
 }
 
-type TableName = "debts" | "investments" | "cash_flows" | "family_members";
+export type TableName = "debts" | "investments" | "cash_flows" | "family_members" | "goals" | "lump_costs";
 
 export function useUpsertRow(table: TableName, userId: string | undefined) {
   const qc = useQueryClient();
