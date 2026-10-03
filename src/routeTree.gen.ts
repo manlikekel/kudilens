@@ -12,8 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdvisorRouteImport } from './routes/advisor'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as IdeasRouteImport } from './routes/ideas'
+import { Route as InsightsRouteImport } from './routes/insights'
 import { Route as PlanRouteImport } from './routes/plan'
 import { Route as RecordsRouteImport } from './routes/records'
+import { Route as ReviewRouteImport } from './routes/review'
 import { Route as ApiAdvisorRouteImport } from './routes/api/advisor'
 import { Route as ApiIdeasRouteImport } from './routes/api/ideas'
 import { Route as ApiInsightsRouteImport } from './routes/api/insights'
@@ -34,6 +37,16 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const IdeasRoute = IdeasRouteImport.update({
+  id: '/ideas',
+  path: '/ideas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InsightsRoute = InsightsRouteImport.update({
+  id: '/insights',
+  path: '/insights',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PlanRoute = PlanRouteImport.update({
   id: '/plan',
   path: '/plan',
@@ -42,6 +55,11 @@ const PlanRoute = PlanRouteImport.update({
 const RecordsRoute = RecordsRouteImport.update({
   id: '/records',
   path: '/records',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReviewRoute = ReviewRouteImport.update({
+  id: '/review',
+  path: '/review',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAdvisorRoute = ApiAdvisorRouteImport.update({
@@ -69,8 +87,11 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/advisor': typeof AdvisorRoute
   '/auth': typeof AuthRoute
+  '/ideas': typeof IdeasRoute
+  '/insights': typeof InsightsRoute
   '/plan': typeof PlanRoute
   '/records': typeof RecordsRoute
+  '/review': typeof ReviewRoute
   '/api/advisor': typeof ApiAdvisorRoute
   '/api/ideas': typeof ApiIdeasRoute
   '/api/insights': typeof ApiInsightsRoute
@@ -80,8 +101,11 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/advisor': typeof AdvisorRoute
   '/auth': typeof AuthRoute
+  '/ideas': typeof IdeasRoute
+  '/insights': typeof InsightsRoute
   '/plan': typeof PlanRoute
   '/records': typeof RecordsRoute
+  '/review': typeof ReviewRoute
   '/api/advisor': typeof ApiAdvisorRoute
   '/api/ideas': typeof ApiIdeasRoute
   '/api/insights': typeof ApiInsightsRoute
@@ -92,8 +116,11 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/advisor': typeof AdvisorRoute
   '/auth': typeof AuthRoute
+  '/ideas': typeof IdeasRoute
+  '/insights': typeof InsightsRoute
   '/plan': typeof PlanRoute
   '/records': typeof RecordsRoute
+  '/review': typeof ReviewRoute
   '/api/advisor': typeof ApiAdvisorRoute
   '/api/ideas': typeof ApiIdeasRoute
   '/api/insights': typeof ApiInsightsRoute
@@ -105,8 +132,11 @@ export interface FileRouteTypes {
     | '/'
     | '/advisor'
     | '/auth'
+    | '/ideas'
+    | '/insights'
     | '/plan'
     | '/records'
+    | '/review'
     | '/api/advisor'
     | '/api/ideas'
     | '/api/insights'
@@ -116,8 +146,11 @@ export interface FileRouteTypes {
     | '/'
     | '/advisor'
     | '/auth'
+    | '/ideas'
+    | '/insights'
     | '/plan'
     | '/records'
+    | '/review'
     | '/api/advisor'
     | '/api/ideas'
     | '/api/insights'
@@ -127,8 +160,11 @@ export interface FileRouteTypes {
     | '/'
     | '/advisor'
     | '/auth'
+    | '/ideas'
+    | '/insights'
     | '/plan'
     | '/records'
+    | '/review'
     | '/api/advisor'
     | '/api/ideas'
     | '/api/insights'
@@ -139,8 +175,11 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdvisorRoute: typeof AdvisorRoute
   AuthRoute: typeof AuthRoute
+  IdeasRoute: typeof IdeasRoute
+  InsightsRoute: typeof InsightsRoute
   PlanRoute: typeof PlanRoute
   RecordsRoute: typeof RecordsRoute
+  ReviewRoute: typeof ReviewRoute
   ApiAdvisorRoute: typeof ApiAdvisorRoute
   ApiIdeasRoute: typeof ApiIdeasRoute
   ApiInsightsRoute: typeof ApiInsightsRoute
@@ -170,6 +209,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ideas': {
+      id: '/ideas'
+      path: '/ideas'
+      fullPath: '/ideas'
+      preLoaderRoute: typeof IdeasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/insights': {
+      id: '/insights'
+      path: '/insights'
+      fullPath: '/insights'
+      preLoaderRoute: typeof InsightsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/plan': {
       id: '/plan'
       path: '/plan'
@@ -182,6 +235,13 @@ declare module '@tanstack/react-router' {
       path: '/records'
       fullPath: '/records'
       preLoaderRoute: typeof RecordsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/review': {
+      id: '/review'
+      path: '/review'
+      fullPath: '/review'
+      preLoaderRoute: typeof ReviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/advisor': {
@@ -219,8 +279,11 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdvisorRoute: AdvisorRoute,
   AuthRoute: AuthRoute,
+  IdeasRoute: IdeasRoute,
+  InsightsRoute: InsightsRoute,
   PlanRoute: PlanRoute,
   RecordsRoute: RecordsRoute,
+  ReviewRoute: ReviewRoute,
   ApiAdvisorRoute: ApiAdvisorRoute,
   ApiIdeasRoute: ApiIdeasRoute,
   ApiInsightsRoute: ApiInsightsRoute,
