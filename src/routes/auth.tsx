@@ -11,13 +11,13 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in — LedgerIQ personal finance analyst" },
+      { title: "Sign in — KudiLens personal finance analyst" },
       {
         name: "description",
         content:
-          "Sign in to LedgerIQ to track debts, investments, income and family costs, and get data-driven money insights.",
+          "Sign in to KudiLens to track debts, investments, income and family costs, and get data-driven money insights.",
       },
-      { property: "og:title", content: "Sign in — LedgerIQ" },
+      { property: "og:title", content: "Sign in — KudiLens" },
       {
         property: "og:description",
         content: "Your private financial analyst for debts, investments and long-term projections.",

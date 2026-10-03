@@ -25,13 +25,13 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "LedgerIQ — your personal finance analyst" },
+      { title: "KudiLens — your personal finance analyst" },
       {
         name: "description",
         content:
           "See your net worth, debt, investments and family costs in one place, with projections and data-driven advice.",
       },
-      { property: "og:title", content: "LedgerIQ — your personal finance analyst" },
+      { property: "og:title", content: "KudiLens — your personal finance analyst" },
       {
         property: "og:description",
         content: "Projections, insights and AI advice built from your own money data.",

@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
-import { LineChart, Sparkle, Table2, LogOut } from "lucide-react";
+import { LineChart, MessageCircle, Table2, LogOut, Compass, Bell, Lightbulb, FileText } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,8 +8,12 @@ import { cn } from "@/lib/utils";
 
 const nav = [
   { to: "/", label: "Dashboard", icon: LineChart },
+  { to: "/plan", label: "Plan", icon: Compass },
+  { to: "/insights", label: "Insights", icon: Bell },
+  { to: "/ideas", label: "My Ideas", icon: Lightbulb },
+  { to: "/advisor", label: "Ask Kudi", icon: MessageCircle },
+  { to: "/review", label: "Review", icon: FileText },
   { to: "/records", label: "My numbers", icon: Table2 },
-  { to: "/advisor", label: "Advisor", icon: Sparkle },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -31,12 +35,12 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-30 border-b border-border/70 bg-background/80 backdrop-blur">
+      <header className="print:hidden sticky top-0 z-30 border-b border-border/70 bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center gap-6 px-4 py-3">
           <span className="font-display text-lg font-semibold tracking-tight">
-            Ledger<span className="text-primary">IQ</span>
+            Kudi<span className="text-primary">Lens</span>
           </span>
-          <nav className="flex flex-1 items-center gap-1">
+          <nav className="flex flex-1 items-center gap-1 overflow-x-auto">
             {nav.map((item) => (
               <Link
                 key={item.to}
@@ -47,7 +51,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 )}
               >
                 <item.icon className="size-4" />
-                <span className="hidden sm:inline">{item.label}</span>
+                <span className="hidden lg:inline">{item.label}</span>
               </Link>
             ))}
           </nav>

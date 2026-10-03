@@ -15,12 +15,12 @@ import { Textarea } from "@/components/ui/textarea";
 export const Route = createFileRoute("/records")({
   head: () => ({
     meta: [
-      { title: "My numbers — LedgerIQ" },
+      { title: "My numbers — KudiLens" },
       {
         name: "description",
         content: "Enter your profile, family, income, spending, debts and investments for analysis.",
       },
-      { property: "og:title", content: "My numbers — LedgerIQ" },
+      { property: "og:title", content: "My numbers — KudiLens" },
       {
         property: "og:description",
         content: "Your profile, family, cash flows, debts and investments in one place.",
