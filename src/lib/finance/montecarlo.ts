@@ -66,27 +66,28 @@ export function monteCarlo(
         cpi *= 1 + a.inflation;
         pots.forEach((p, k) => {
           const r = Math.max(-0.95, p.mu + p.sigma * normal(rand));
-          vals[k] = vals[k] * (1 + r) + p.yearly;
+          vals[k] = vals[k]! * (1 + r) + p.yearly;
         });
         let freed = 0;
         debts.forEach((d, k) => {
-          if (loans[k] <= 0) {
+          if (loans[k]! <= 0) {
             freed += d.pay;
             return;
           }
-          loans[k] = loans[k] * (1 + d.r) - d.pay;
-          if (loans[k] < 0) {
-            freed += -loans[k];
+          loans[k] = loans[k]! * (1 + d.r) - d.pay;
+          if (loans[k]! < 0) {
+            freed += -loans[k]!;
             loans[k] = 0;
           }
         });
         cash = cash * (1 + a.inflation * 0.5) + surplusNGN * Math.pow(1 + a.salaryGrowth, y - 1) + freed;
       }
-      const assets = vals.reduce((acc, v, k) => acc + (pots[k].usd ? v * fx : v), 0) + cash;
+      const assets = vals.reduce((acc, v, k) => acc + (pots[k]!.usd ? v * fx : v), 0) + cash;
       const nw = assets - loans.reduce((x, b) => x + Math.max(0, b), 0);
-      buckets[y].nominal.push(nw);
-      buckets[y].real.push(nw / cpi);
-      buckets[y].usd.push(nw / fx);
+      const bk = buckets[y]!;
+      bk.nominal.push(nw);
+      bk.real.push(nw / cpi);
+      bk.usd.push(nw / fx);
     }
   }
 

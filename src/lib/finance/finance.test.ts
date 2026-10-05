@@ -61,10 +61,10 @@ describe("monte carlo", () => {
   it("returns ordered percentiles and is deterministic", () => {
     const a = monteCarlo(data, { years: 5, sims: 200 });
     const b = monteCarlo(data, { years: 5, sims: 200 });
-    const p = a.points[5].nominal;
+    const p = a.points[5]!.nominal;
     expect(p[0]).toBeLessThanOrEqual(p[1]);
     expect(p[1]).toBeLessThanOrEqual(p[2]);
-    expect(a.points[5].nominal).toEqual(b.points[5].nominal);
+    expect(a.points[5]!.nominal).toEqual(b.points[5]!.nominal);
   });
 });
 
@@ -82,7 +82,7 @@ describe("family", () => {
     expect(stageForAge(19)).toBe("university");
   });
   it("forecasts costs and name-free events", () => {
-    expect(educationForecast(data, 5)[0].local).toBeGreaterThan(0);
+    expect(educationForecast(data, 5)[0]!.local).toBeGreaterThan(0);
     expect(lifeEvents(data).some((e) => e.label.includes("Ada"))).toBe(false);
   });
 });
@@ -94,11 +94,11 @@ describe("stress & protection", () => {
     expect(r.after.usd).toBeLessThan(r.before.usd);
   });
   it("real return below nominal", () => {
-    expect(realReturns(data)[0].real).toBeLessThan(8);
+    expect(realReturns(data)[0]!.real).toBeLessThan(8);
   });
   it("emergency months include dependants", () => {
     expect(emergencyFund(data).months).toBe(4);
-    expect(protectionGaps(data)[0].gap).toBeGreaterThan(0);
+    expect(protectionGaps(data)[0]!.gap).toBeGreaterThan(0);
   });
 });
 

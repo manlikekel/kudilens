@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Lightbulb, Plus, Sparkles as _unused, Trash2 } from "lucide-react";
+import { Lightbulb, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,7 +14,6 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Disclaimer, compact } from "@/components/kudi";
 
-void _unused;
 
 export const Route = createFileRoute("/ideas")({
   head: () => ({

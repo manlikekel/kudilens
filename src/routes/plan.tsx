@@ -84,7 +84,7 @@ function Forecast({ data }: { data: FinanceData }) {
   });
   const horizons = pickHorizons(data).filter((h) => h <= years);
   const target = p?.age && p.retirement_age ? Math.min(years, Math.max(1, Math.min(10, p.retirement_age - p.age))) : 10;
-  const pt = mc.points[target];
+  const pt = mc.points[target]!;
   return (
     <Card title="Net worth forecast" sub={`${mc.sims.toLocaleString()} simulated futures`}>
       <ToggleGroup type="single" value={view} onValueChange={(v) => v && setView(v as View)} variant="outline" size="sm">
@@ -107,10 +107,10 @@ function Forecast({ data }: { data: FinanceData }) {
       </div>
       <div className="mt-4 grid gap-2 sm:grid-cols-5">
         {horizons.map((h) => {
-          const x = mc.points[h][view];
+          const x = mc.points[h]![view];
           return (
             <div key={h} className="rounded-lg bg-secondary/50 p-3 text-sm">
-              <p className="text-xs text-muted-foreground">In {h} yr{mc.points[h].age ? ` · age ${mc.points[h].age}` : ""}</p>
+              <p className="text-xs text-muted-foreground">In {h} yr{mc.points[h]!.age ? ` · age ${mc.points[h]!.age}` : ""}</p>
               <p className="numeric font-semibold">
                 <Num formula={mc.formula}>{compact(x[1], cur)}</Num>
               </p>
