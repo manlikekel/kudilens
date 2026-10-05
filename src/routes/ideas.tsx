@@ -188,7 +188,7 @@ function IdeasPage() {
   );
 }
 
-function List({ title, items }: { title: string; items?: string[] }) {
+function List({ title, items }: { title: string; items?: string[] | undefined }) {
   if (!items?.length) return null;
   return (
     <div>
@@ -198,7 +198,7 @@ function List({ title, items }: { title: string; items?: string[] }) {
   );
 }
 
-function Stat({ label, value }: { label: string; value?: string }) {
+function Stat({ label, value }: { label: string; value?: string | undefined }) {
   return (
     <div className="rounded-lg bg-secondary/50 p-3">
       <p className="text-xs text-muted-foreground">{label}</p>

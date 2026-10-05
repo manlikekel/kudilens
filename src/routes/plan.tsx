@@ -211,9 +211,9 @@ function Debts({ data }: { data: FinanceData }) {
   const len = Math.max(...results.map((r) => r.timeline.length));
   const chart = Array.from({ length: len }, (_, m) => ({
     month: m,
-    Avalanche: results[0].timeline[m]?.balance ?? 0,
-    Snowball: results[1].timeline[m]?.balance ?? 0,
-    Custom: results[2].timeline[m]?.balance ?? 0,
+    Avalanche: results[0]!.timeline[m]?.balance ?? 0,
+    Snowball: results[1]!.timeline[m]?.balance ?? 0,
+    Custom: results[2]!.timeline[m]?.balance ?? 0,
   }));
   const flagged = debtsAboveReturn(debts, s.weightedReturn * 100 || 0);
   const date = (m: number) => new Date(new Date().getFullYear(), new Date().getMonth() + m).toLocaleDateString("en-GB", { month: "short", year: "numeric" });
