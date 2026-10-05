@@ -222,7 +222,7 @@ function Debts({ data }: { data: FinanceData }) {
       const n = [...c];
       const j = i + dir;
       if (j < 0 || j >= n.length) return c;
-      [n[i], n[j]] = [n[j], n[i]];
+      [n[i], n[j]] = [n[j]!, n[i]!];
       return n;
     });
   return (
