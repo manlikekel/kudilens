@@ -84,7 +84,7 @@ function Forecast({ data }: { data: FinanceData }) {
   });
   const horizons = pickHorizons(data).filter((h) => h <= years);
   const target = p?.age && p.retirement_age ? Math.min(years, Math.max(1, Math.min(10, p.retirement_age - p.age))) : 10;
-  const pt = mc.points[target];
+  const pt = mc.points[target]!;
   return (
     <Card title="Net worth forecast" sub={`${mc.sims.toLocaleString()} simulated futures`}>
       <ToggleGroup type="single" value={view} onValueChange={(v) => v && setView(v as View)} variant="outline" size="sm">
@@ -107,10 +107,10 @@ function Forecast({ data }: { data: FinanceData }) {
       </div>
       <div className="mt-4 grid gap-2 sm:grid-cols-5">
         {horizons.map((h) => {
-          const x = mc.points[h][view];
+          const x = mc.points[h]![view];
           return (
             <div key={h} className="rounded-lg bg-secondary/50 p-3 text-sm">
-              <p className="text-xs text-muted-foreground">In {h} yr{mc.points[h].age ? ` · age ${mc.points[h].age}` : ""}</p>
+              <p className="text-xs text-muted-foreground">In {h} yr{mc.points[h]!.age ? ` · age ${mc.points[h]!.age}` : ""}</p>
               <p className="numeric font-semibold">
                 <Num formula={mc.formula}>{compact(x[1], cur)}</Num>
               </p>
@@ -211,9 +211,9 @@ function Debts({ data }: { data: FinanceData }) {
   const len = Math.max(...results.map((r) => r.timeline.length));
   const chart = Array.from({ length: len }, (_, m) => ({
     month: m,
-    Avalanche: results[0].timeline[m]?.balance ?? 0,
-    Snowball: results[1].timeline[m]?.balance ?? 0,
-    Custom: results[2].timeline[m]?.balance ?? 0,
+    Avalanche: results[0]!.timeline[m]?.balance ?? 0,
+    Snowball: results[1]!.timeline[m]?.balance ?? 0,
+    Custom: results[2]!.timeline[m]?.balance ?? 0,
   }));
   const flagged = debtsAboveReturn(debts, s.weightedReturn * 100 || 0);
   const date = (m: number) => new Date(new Date().getFullYear(), new Date().getMonth() + m).toLocaleDateString("en-GB", { month: "short", year: "numeric" });
@@ -222,7 +222,7 @@ function Debts({ data }: { data: FinanceData }) {
       const n = [...c];
       const j = i + dir;
       if (j < 0 || j >= n.length) return c;
-      [n[i], n[j]] = [n[j], n[i]];
+      [n[i], n[j]] = [n[j]!, n[i]!];
       return n;
     });
   return (
@@ -231,7 +231,7 @@ function Debts({ data }: { data: FinanceData }) {
         <p className="text-sm">
           Extra payment per month: <span className="numeric font-semibold">{compact(extra)}</span>
         </p>
-        <Slider className="mt-2 max-w-md" value={[extra]} max={Math.max(500_000, s.monthlyIncome * 0.5)} step={10_000} onValueChange={([v]) => setExtra(v)} />
+        <Slider className="mt-2 max-w-md" value={[extra]} max={Math.max(500_000, s.monthlyIncome * 0.5)} step={10_000} onValueChange={([v]) => setExtra(v ?? 0)} />
       </div>
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
         {results.map((r) => (
@@ -426,7 +426,7 @@ function Stress({ data }: { data: FinanceData }) {
       )}
       <div className="mt-4">
         <p className="text-sm">What if the Naira loses another <b>{shock}%</b>?</p>
-        <Slider className="mt-2 max-w-md" value={[shock]} min={10} max={60} step={5} onValueChange={([v]) => setShock(v)} />
+        <Slider className="mt-2 max-w-md" value={[shock]} min={10} max={60} step={5} onValueChange={([v]) => setShock(v ?? 30)} />
         <div className="mt-3 grid gap-2 text-sm sm:grid-cols-3">
           <div className="rounded-lg bg-secondary/50 p-3">
             <p className="text-xs text-muted-foreground">Net worth in Naira</p>

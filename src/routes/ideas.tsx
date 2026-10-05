@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Lightbulb, Plus, Sparkles as _unused, Trash2 } from "lucide-react";
+import { Lightbulb, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,7 +14,6 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Disclaimer, compact } from "@/components/kudi";
 
-void _unused;
 
 export const Route = createFileRoute("/ideas")({
   head: () => ({
@@ -189,7 +188,7 @@ function IdeasPage() {
   );
 }
 
-function List({ title, items }: { title: string; items?: string[] }) {
+function List({ title, items }: { title: string; items?: string[] | undefined }) {
   if (!items?.length) return null;
   return (
     <div>
@@ -199,7 +198,7 @@ function List({ title, items }: { title: string; items?: string[] }) {
   );
 }
 
-function Stat({ label, value }: { label: string; value?: string }) {
+function Stat({ label, value }: { label: string; value?: string | undefined }) {
   return (
     <div className="rounded-lg bg-secondary/50 p-3">
       <p className="text-xs text-muted-foreground">{label}</p>

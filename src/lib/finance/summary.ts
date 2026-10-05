@@ -27,7 +27,7 @@ export function aiSummary(data: FinanceData) {
   const a = getAssumptions(data);
   const s = summarize(data);
   const mc = monteCarlo(data, { years: 20, sims: 300 });
-  const pick = (y: number) => mc.points[Math.min(y, mc.points.length - 1)];
+  const pick = (y: number) => mc.points[Math.min(y, mc.points.length - 1)]!;
   const payoff = simulatePayoff(
     data.debts.map((d) => ({
       id: d.id,
