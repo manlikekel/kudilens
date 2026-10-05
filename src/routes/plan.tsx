@@ -231,7 +231,7 @@ function Debts({ data }: { data: FinanceData }) {
         <p className="text-sm">
           Extra payment per month: <span className="numeric font-semibold">{compact(extra)}</span>
         </p>
-        <Slider className="mt-2 max-w-md" value={[extra]} max={Math.max(500_000, s.monthlyIncome * 0.5)} step={10_000} onValueChange={([v]) => setExtra(v)} />
+        <Slider className="mt-2 max-w-md" value={[extra]} max={Math.max(500_000, s.monthlyIncome * 0.5)} step={10_000} onValueChange={([v]) => setExtra(v ?? 0)} />
       </div>
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
         {results.map((r) => (
@@ -426,7 +426,7 @@ function Stress({ data }: { data: FinanceData }) {
       )}
       <div className="mt-4">
         <p className="text-sm">What if the Naira loses another <b>{shock}%</b>?</p>
-        <Slider className="mt-2 max-w-md" value={[shock]} min={10} max={60} step={5} onValueChange={([v]) => setShock(v)} />
+        <Slider className="mt-2 max-w-md" value={[shock]} min={10} max={60} step={5} onValueChange={([v]) => setShock(v ?? 30)} />
         <div className="mt-3 grid gap-2 text-sm sm:grid-cols-3">
           <div className="rounded-lg bg-secondary/50 p-3">
             <p className="text-xs text-muted-foreground">Net worth in Naira</p>
