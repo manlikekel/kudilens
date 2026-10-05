@@ -2,6 +2,10 @@
 
 - [x] Backend tables + login (email, Google)
 - [x] Dashboard with projections & insights
-- [x] "My numbers" page (profile, family, income/spending, debts, investments)
-- [x] AI advisor chat (single saved conversation)
-- [x] Investigate reported error in src/hooks/use-mobile.tsx
+- [x] "My numbers" page (profile, family, income/spending, debts, investments, goals, yearly costs, assumptions)
+- [x] Tested finance engine (Monte Carlo, goals, debt, cash flow, family, stress, emergency)
+- [x] Plan tab (7 tools, "What this means", tap-to-explain numbers)
+- [x] Insights feed (weekly, Done/Snooze/Not relevant feedback)
+- [x] Ask Kudi chat (replaces Advisor; chips, inline charts)
+- [x] My Ideas reviewer with verdicts + side-by-side compare
+- [x] Monthly review with PDF export (print)
