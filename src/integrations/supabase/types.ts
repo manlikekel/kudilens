@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounts: {
+        Row: {
+          balance: number
+          created_at: string
+          currency: string
+          id: string
+          is_emergency_fund: boolean
+          kind: string
+          name: string
+          user_id: string
+          yield_rate: number
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          is_emergency_fund?: boolean
+          kind?: string
+          name: string
+          user_id: string
+          yield_rate?: number
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          is_emergency_fund?: boolean
+          kind?: string
+          name?: string
+          user_id?: string
+          yield_rate?: number
+        }
+        Relationships: []
+      }
       advisor_messages: {
         Row: {
           content: string
@@ -82,6 +118,42 @@ export type Database = {
           snoozed_until?: string | null
           status?: string
           title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      assets: {
+        Row: {
+          appreciation: number
+          created_at: string
+          currency: string
+          current_value: number
+          id: string
+          kind: string
+          liquid: boolean
+          name: string
+          user_id: string
+        }
+        Insert: {
+          appreciation?: number
+          created_at?: string
+          currency?: string
+          current_value?: number
+          id?: string
+          kind?: string
+          liquid?: boolean
+          name: string
+          user_id: string
+        }
+        Update: {
+          appreciation?: number
+          created_at?: string
+          currency?: string
+          current_value?: number
+          id?: string
+          kind?: string
+          liquid?: boolean
+          name?: string
           user_id?: string
         }
         Relationships: []
@@ -206,16 +278,41 @@ export type Database = {
         }
         Relationships: []
       }
+      fx_rates: {
+        Row: {
+          as_of: string
+          currency: string
+          per_usd: number
+          source: string
+        }
+        Insert: {
+          as_of?: string
+          currency: string
+          per_usd: number
+          source?: string
+        }
+        Update: {
+          as_of?: string
+          currency?: string
+          per_usd?: number
+          source?: string
+        }
+        Relationships: []
+      }
       goals: {
         Row: {
           created_at: string
           currency: string
           current_saved: number
+          goal_inflation: number | null
           id: string
+          linked_account_id: string | null
           monthly_contribution: number
           name: string
           priority: number
+          saved_in: string
           target_amount: number
+          target_month: number
           target_year: number
           user_id: string
         }
@@ -223,11 +320,15 @@ export type Database = {
           created_at?: string
           currency?: string
           current_saved?: number
+          goal_inflation?: number | null
           id?: string
+          linked_account_id?: string | null
           monthly_contribution?: number
           name: string
           priority?: number
+          saved_in?: string
           target_amount?: number
+          target_month?: number
           target_year: number
           user_id: string
         }
@@ -235,11 +336,15 @@ export type Database = {
           created_at?: string
           currency?: string
           current_saved?: number
+          goal_inflation?: number | null
           id?: string
+          linked_account_id?: string | null
           monthly_contribution?: number
           name?: string
           priority?: number
+          saved_in?: string
           target_amount?: number
+          target_month?: number
           target_year?: number
           user_id?: string
         }
@@ -381,15 +486,20 @@ export type Database = {
         Row: {
           age: number | null
           base_currency: string
+          cash_yield_ratio: number
           created_at: string
           education_inflation: number
           emergency_fund: number
+          foreign_inflation: number
           full_name: string | null
           fx_depreciation: number
+          fx_overrides: Json
           goals: string | null
+          grow_contributions: boolean
           health_cover: number
           id: string
           income_stability: string
+          inflation_fx_correlation: number
           inflation_rate: number
           life_cover: number
           retirement_age: number | null
@@ -401,15 +511,20 @@ export type Database = {
         Insert: {
           age?: number | null
           base_currency?: string
+          cash_yield_ratio?: number
           created_at?: string
           education_inflation?: number
           emergency_fund?: number
+          foreign_inflation?: number
           full_name?: string | null
           fx_depreciation?: number
+          fx_overrides?: Json
           goals?: string | null
+          grow_contributions?: boolean
           health_cover?: number
           id: string
           income_stability?: string
+          inflation_fx_correlation?: number
           inflation_rate?: number
           life_cover?: number
           retirement_age?: number | null
@@ -421,15 +536,20 @@ export type Database = {
         Update: {
           age?: number | null
           base_currency?: string
+          cash_yield_ratio?: number
           created_at?: string
           education_inflation?: number
           emergency_fund?: number
+          foreign_inflation?: number
           full_name?: string | null
           fx_depreciation?: number
+          fx_overrides?: Json
           goals?: string | null
+          grow_contributions?: boolean
           health_cover?: number
           id?: string
           income_stability?: string
+          inflation_fx_correlation?: number
           inflation_rate?: number
           life_cover?: number
           retirement_age?: number | null
