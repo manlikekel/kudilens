@@ -15,6 +15,13 @@
       "when": 1790684825968,
       "tag": "0001_plan_and_ai_layer",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791555053393,
+      "tag": "0002_corrections_balance_sheet_fx_goals",
+      "breakpoints": true
     }
   ]
 }
