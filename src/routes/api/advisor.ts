@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { aiSummary } from "@/lib/finance";
-import { KUDI_TONE, loadData } from "@/lib/ai.server";
+import { errorResponse, KUDI_TONE, loadData } from "@/lib/ai.server";
 
 const SYSTEM = `${KUDI_TONE}
 You are the "Ask Kudi" chat. You receive a compact JSON summary (no household names) with forecasts already computed by the app's finance engine: Monte Carlo net worth percentiles, goal probabilities, debt payoff, emergency fund, health score.
@@ -35,7 +35,9 @@ export const Route = createFileRoute("/api/advisor")({
         const message = typeof body?.message === "string" ? body.message.trim().slice(0, 4000) : "";
         if (!message) return new Response("Message required", { status: 400 });
 
-        const [data, history] = await Promise.all([
+        let loaded;
+        try {
+          loaded = await Promise.all([
           loadData(supabase, userId),
           supabase
             .from("advisor_messages")
@@ -43,7 +45,12 @@ export const Route = createFileRoute("/api/advisor")({
             .eq("user_id", userId)
             .order("created_at", { ascending: true })
             .limit(40),
-        ]);
+          ]);
+        } catch (e) {
+          return errorResponse(e);
+        }
+        const [data, history] = loaded;
+        if (history.error) return new Response(`Could not load chat history: ${history.error.message}`, { status: 500 });
         const snapshot = aiSummary(data);
 
         const { error: insErr } = await supabase
