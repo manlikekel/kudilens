@@ -1,5 +1,5 @@
 import type { FinanceData } from "./core";
-import { getAssumptions } from "./assumptions";
+import { getAssumptions, toNGN } from "./assumptions";
 
 export type Stage = "none" | "nursery" | "primary" | "secondary" | "university" | "done";
 
@@ -39,7 +39,7 @@ export function educationForecast(data: FinanceData, years = 25): EducationYear[
       local += ngn;
       if (st === "university") {
         const usd = SCHOOL_FEES.USD.university * Math.pow(1.04, t);
-        abroad += usd * a.rate * Math.pow(1 + a.fxDepreciation, t);
+        abroad += toNGN(usd, "USD", a) * Math.pow(1 + a.fxDepreciation, t);
       } else abroad += ngn;
     }
     out.push({ year: y0 + t, local, abroad });

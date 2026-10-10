@@ -20,24 +20,40 @@ export async function authed(request: Request) {
 
 export type Sb = NonNullable<Awaited<ReturnType<typeof authed>>>["supabase"];
 
+/**
+ * Loads the user's data under RLS. Errors are surfaced (thrown), not swallowed.
+ * Household member names are never selected, so they cannot reach the model.
+ */
 export async function loadData(supabase: Sb, userId: string): Promise<FinanceData> {
-  const [profile, debts, investments, flows, family, goals, lumps] = await Promise.all([
+  const results = await Promise.all([
     supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
     supabase.from("debts").select("*").eq("user_id", userId),
     supabase.from("investments").select("*").eq("user_id", userId),
     supabase.from("cash_flows").select("*").eq("user_id", userId),
-    supabase.from("family_members").select("*").eq("user_id", userId),
+    supabase.from("family_members").select("id, relationship, age, dependent, monthly_cost, currency").eq("user_id", userId),
     supabase.from("goals").select("*").eq("user_id", userId),
     supabase.from("lump_costs").select("*").eq("user_id", userId),
+    supabase.from("accounts").select("*").eq("user_id", userId),
+    supabase.from("assets").select("*").eq("user_id", userId),
+    supabase.from("fx_rates").select("*"),
   ]);
+  const failed = results.find((r) => r.error);
+  if (failed?.error) {
+    console.error("loadData failed", failed.error);
+    throw new AIError(500, `Could not load your data: ${failed.error.message}`);
+  }
+  const [profile, debts, investments, flows, family, goals, lumps, accounts, assets, fx] = results.map((r) => r.data);
   return {
-    profile: profile.data,
-    debts: debts.data ?? [],
-    investments: investments.data ?? [],
-    flows: flows.data ?? [],
-    family: family.data ?? [],
-    goals: goals.data ?? [],
-    lumps: lumps.data ?? [],
+    profile,
+    debts: debts ?? [],
+    investments: investments ?? [],
+    flows: flows ?? [],
+    family: ((family as unknown[]) ?? []).map((m) => ({ ...(m as object), name: "" })),
+    goals: goals ?? [],
+    lumps: lumps ?? [],
+    accounts: accounts ?? [],
+    assets: assets ?? [],
+    fxRates: fx ?? [],
   } as unknown as FinanceData;
 }
 

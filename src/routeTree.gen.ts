@@ -21,6 +21,7 @@ import { Route as ApiAdvisorRouteImport } from './routes/api/advisor'
 import { Route as ApiIdeasRouteImport } from './routes/api/ideas'
 import { Route as ApiInsightsRouteImport } from './routes/api/insights'
 import { Route as ApiReviewRouteImport } from './routes/api/review'
+import { Route as ApiPublicHooksRefreshFxRouteImport } from './routes/api/public/hooks/refresh-fx'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -82,6 +83,11 @@ const ApiReviewRoute = ApiReviewRouteImport.update({
   path: '/api/review',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksRefreshFxRoute = ApiPublicHooksRefreshFxRouteImport.update({
+  id: '/api/public/hooks/refresh-fx',
+  path: '/api/public/hooks/refresh-fx',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -96,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/api/ideas': typeof ApiIdeasRoute
   '/api/insights': typeof ApiInsightsRoute
   '/api/review': typeof ApiReviewRoute
+  '/api/public/hooks/refresh-fx': typeof ApiPublicHooksRefreshFxRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -110,6 +117,7 @@ export interface FileRoutesByTo {
   '/api/ideas': typeof ApiIdeasRoute
   '/api/insights': typeof ApiInsightsRoute
   '/api/review': typeof ApiReviewRoute
+  '/api/public/hooks/refresh-fx': typeof ApiPublicHooksRefreshFxRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -125,6 +133,7 @@ export interface FileRoutesById {
   '/api/ideas': typeof ApiIdeasRoute
   '/api/insights': typeof ApiInsightsRoute
   '/api/review': typeof ApiReviewRoute
+  '/api/public/hooks/refresh-fx': typeof ApiPublicHooksRefreshFxRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
     | '/api/ideas'
     | '/api/insights'
     | '/api/review'
+    | '/api/public/hooks/refresh-fx'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -155,6 +165,7 @@ export interface FileRouteTypes {
     | '/api/ideas'
     | '/api/insights'
     | '/api/review'
+    | '/api/public/hooks/refresh-fx'
   id:
     | '__root__'
     | '/'
@@ -169,6 +180,7 @@ export interface FileRouteTypes {
     | '/api/ideas'
     | '/api/insights'
     | '/api/review'
+    | '/api/public/hooks/refresh-fx'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -184,6 +196,7 @@ export interface RootRouteChildren {
   ApiIdeasRoute: typeof ApiIdeasRoute
   ApiInsightsRoute: typeof ApiInsightsRoute
   ApiReviewRoute: typeof ApiReviewRoute
+  ApiPublicHooksRefreshFxRoute: typeof ApiPublicHooksRefreshFxRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -272,6 +285,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiReviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/refresh-fx': {
+      id: '/api/public/hooks/refresh-fx'
+      path: '/api/public/hooks/refresh-fx'
+      fullPath: '/api/public/hooks/refresh-fx'
+      preLoaderRoute: typeof ApiPublicHooksRefreshFxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -288,6 +308,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiIdeasRoute: ApiIdeasRoute,
   ApiInsightsRoute: ApiInsightsRoute,
   ApiReviewRoute: ApiReviewRoute,
+  ApiPublicHooksRefreshFxRoute: ApiPublicHooksRefreshFxRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

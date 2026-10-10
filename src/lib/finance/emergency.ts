@@ -19,10 +19,14 @@ export function emergencyFund(data: FinanceData): EmergencyCheck {
   const variable = a.incomeStability !== "stable" ? 3 : 0;
   const dep = Math.min(3, s.dependents);
   const months = 3 + variable + dep;
+  const flagged = (data.accounts ?? []).filter((x) => x.is_emergency_fund);
   const cash = data.investments
     .filter((i) => i.asset_class === "cash")
     .reduce((t, i) => t + toNGN(i.current_value, i.currency, a), 0);
-  const current = cash + b(Number(data.profile?.emergency_fund ?? 0));
+  // Prefer accounts marked as the emergency fund; fall back to the older profile figure.
+  const current = flagged.length
+    ? flagged.reduce((t, x) => t + toNGN(x.balance, x.currency, a), 0)
+    : cash + b(Number(data.profile?.emergency_fund ?? 0));
   const target = essentialMonthly * months;
   return {
     essentialMonthly,

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Bar, BarChart, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Info } from "lucide-react";
+import { formatMoney } from "@/lib/finance/fx";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 export function Disclaimer() {
@@ -12,10 +13,7 @@ export function Disclaimer() {
 }
 
 export function compact(n: number, cur = "NGN") {
-  const sym = cur === "USD" ? "$" : "₦";
-  const a = Math.abs(n);
-  const s = a >= 1e9 ? `${(a / 1e9).toFixed(1)}bn` : a >= 1e6 ? `${(a / 1e6).toFixed(1)}m` : a >= 1e3 ? `${(a / 1e3).toFixed(0)}k` : a.toFixed(0);
-  return `${n < 0 ? "−" : ""}${sym}${s}`;
+  return formatMoney(n, cur);
 }
 
 /** A number you can tap to see how it was calculated. */

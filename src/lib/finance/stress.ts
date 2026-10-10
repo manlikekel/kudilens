@@ -31,32 +31,36 @@ export interface ShockResult {
   formula: string;
 }
 
-/** Naira loses `shock` of its value against USD overnight. */
+/** Naira loses `shock` of its value against every foreign currency overnight. */
 export function devaluationShock(data: FinanceData, shock = 0.3): ShockResult {
   const a = getAssumptions(data);
-  const newRate = a.rate / (1 - shock);
-  let ngnAssets = 0;
-  let usdAssets = 0;
-  data.investments.forEach((i) => {
-    if (i.currency === "USD") usdAssets += Number(i.current_value);
-    else ngnAssets += Number(i.current_value);
-  });
-  let ngnDebt = 0;
-  let usdDebt = 0;
-  data.debts.forEach((d) => {
-    if (d.currency === "USD") usdDebt += Number(d.balance);
-    else ngnDebt += Number(d.balance);
-  });
-  const nw = (rate: number) => ngnAssets - ngnDebt + (usdAssets - usdDebt) * rate;
-  const usdGoals = (data.goals ?? [])
-    .filter((g) => g.currency === "USD")
-    .reduce((t, g) => t + Number(g.target_amount) - Number(g.current_saved), 0);
+  const k = 1 / (1 - shock); // foreign items are worth k× more Naira
+  let ngn = 0;
+  let foreign = 0; // in today's Naira
+  const add = (amount: number, cur: string, sign: 1 | -1) => {
+    const v = toNGN(Number(amount), cur, a) * sign;
+    if (cur === "NGN") ngn += v;
+    else foreign += v;
+  };
+  data.investments.forEach((i) => add(i.current_value, i.currency, 1));
+  (data.accounts ?? []).forEach((x) => add(x.balance, x.currency, 1));
+  (data.assets ?? []).forEach((x) => add(x.current_value, x.currency, 1));
+  data.debts.forEach((d) => add(d.balance, d.currency, -1));
+  const foreignGoals = (data.goals ?? [])
+    .filter((g) => g.currency !== "NGN")
+    .reduce((t, g) => t + toNGN(Number(g.target_amount) - Number(g.current_saved), g.currency, a), 0);
+  const rate = a.ngnPerUSD;
+  const usd = (n: number, r: number) => (Number.isFinite(r) ? n / r : 0);
+  const before = ngn + foreign;
+  const after = ngn + foreign * k;
   return {
     shock,
-    before: { ngn: nw(a.rate), usd: nw(a.rate) / a.rate },
-    after: { ngn: nw(newRate), usd: nw(newRate) / newRate },
-    usdGoalsCostIncrease: Math.max(0, usdGoals) * (newRate - a.rate),
-    formula: `New rate = ${a.rate.toLocaleString()} ÷ (1 − ${shock * 100}%) = ${Math.round(newRate).toLocaleString()} ₦/$. Naira items keep their Naira value; dollar items are re-priced at the new rate.`,
+    before: { ngn: before, usd: usd(before, rate) },
+    after: { ngn: after, usd: usd(after, rate * k) },
+    usdGoalsCostIncrease: Math.max(0, foreignGoals) * (k - 1),
+    formula: Number.isFinite(rate)
+      ? `New rate = ${Math.round(rate).toLocaleString()} ÷ (1 − ${shock * 100}%) = ${Math.round(rate * k).toLocaleString()} ₦/$ (other currencies move the same way). Naira items keep their Naira value; foreign items are re-priced.`
+      : "No Naira exchange rate available — add one in My numbers → Profile.",
   };
 }
 
@@ -76,7 +80,7 @@ export function recommendCurrencyMix(data: FinanceData): CurrencyMix {
   goals.forEach((g) => {
     const v = toNGN(g.target_amount, g.currency, a);
     total += v;
-    const isForeign = g.currency === "USD" || /canada|abroad|uk|us\b|usa|foreign|japa/i.test(g.name);
+    const isForeign = g.currency !== "NGN" || /canada|abroad|uk|us\b|usa|foreign|japa/i.test(g.name);
     if (isForeign) {
       foreign += v * 0.7;
       reasons.push(`"${g.name}" will be paid in foreign currency — fund about 70% of it in USD/CAD.`);
@@ -87,7 +91,7 @@ export function recommendCurrencyMix(data: FinanceData): CurrencyMix {
   if (reasons.length === 0) reasons.push("A 20–30% dollar buffer protects against Naira depreciation even for local goals.");
   const inv = data.investments.reduce((t, i) => t + toNGN(i.current_value, i.currency, a), 0);
   const usd = data.investments
-    .filter((i) => i.currency === "USD")
+    .filter((i) => i.currency !== "NGN")
     .reduce((t, i) => t + toNGN(i.current_value, i.currency, a), 0);
   return { foreignShare, currentForeignShare: inv > 0 ? usd / inv : 0, reasons };
 }

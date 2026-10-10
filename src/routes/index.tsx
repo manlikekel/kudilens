@@ -17,7 +17,7 @@ import { AlertTriangle, CheckCircle2, Eye } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/hooks/useAuth";
 import { useFinance } from "@/lib/useFinance";
-import { buildInsights, formatMoney, project, summarize, convert } from "@/lib/finance";
+import { buildInsights, formatMoney, project, summarize, convert, getRates } from "@/lib/finance";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -97,7 +97,7 @@ function Dashboard() {
     data.investments.reduce<Record<string, number>>((acc, i) => {
       acc[i.asset_class] =
         (acc[i.asset_class] ?? 0) +
-        convert(Number(i.current_value), i.currency, cur, data.profile?.usd_ngn_rate ?? 1500);
+        convert(Number(i.current_value), i.currency, cur, getRates(data));
       return acc;
     }, {}),
   ).map(([name, value]) => ({ name, value }));
