@@ -4,6 +4,7 @@ import { monteCarlo } from "./montecarlo";
 import { analyzeGoals } from "./goals";
 import { emergencyFund } from "./emergency";
 import { simulatePayoff } from "./debt";
+import { nonAmortisingDebts } from "./insights";
 
 /** 0-100 health score from savings rate, debt load, emergency buffer and goal odds. */
 export function healthScore(data: FinanceData): { score: number; parts: Record<string, number> } {
@@ -57,11 +58,20 @@ export function aiSummary(data: FinanceData) {
       lines: data.flows.map((f) => ({ type: f.flow_type, category: f.category, label: f.label, amount: f.monthly_amount, currency: f.currency })),
       lump_costs: (data.lumps ?? []).map((l) => ({ label: l.label, amount: l.amount, currency: l.currency, months: l.months })),
     },
+    accounts: (data.accounts ?? []).map((x) => ({ name: x.name, kind: x.kind, balance: x.balance, currency: x.currency, emergency_fund: x.is_emergency_fund })),
+    assets: (data.assets ?? []).map((x) => ({ name: x.name, kind: x.kind, value: x.current_value, currency: x.currency, appreciation_pct: x.appreciation, liquid: x.liquid })),
+    balance_sheet: { accounts: r(s.totalAccounts), investments: r(s.totalInvested), assets: r(s.totalAssets), debts: r(s.totalDebt), net_worth: r(s.netWorth), liquid: r(s.liquidAssets), runway_months: Number(s.runwayMonths.toFixed(1)) },
+    debts_never_paid_off: nonAmortisingDebts(data).map((d) => d.name),
     debts: data.debts.map((d) => ({ name: d.name, kind: d.kind, balance: d.balance, currency: d.currency, rate_pct: d.interest_rate, min_payment: d.minimum_payment })),
     holdings: data.investments.map((i) => ({ name: i.name, class: i.asset_class, value: i.current_value, currency: i.currency, monthly: i.monthly_contribution, expected_return_pct: i.expected_return, notes: i.notes })),
-    goals: analyzeGoals(data).map((g) => ({ name: g.goal.name, target: g.goal.target_amount, currency: g.goal.currency, year: g.goal.target_year, probability_pct: r(g.probability * 100), monthly_needed_75pct_ngn: r(g.required.p75) })),
+    goals: analyzeGoals(data).map((g) => ({ name: g.goal.name, target: g.goal.target_amount, currency: g.goal.currency, year: g.goal.target_year, month: g.goal.target_month ?? 12, saved_in: g.goal.saved_in, future_cost_ngn: g.targetNGN, probability_pct: r(g.probability * 100), monthly_needed_75pct_ngn: r(g.required.p75) })),
     assumptions: {
-      usd_ngn: a.rate,
+      rates_per_usd: a.rates.perUSD,
+      rates_as_of: a.rates.asOf,
+      user_overridden_rates: a.rates.overridden,
+      inflation_fx_correlation: a.infFxCorrelation,
+      cash_yield_share_of_inflation: a.cashYieldRatio,
+      foreign_inflation_pct: a.foreignInflation * 100,
       inflation_pct: a.inflation * 100,
       fx_depreciation_pct: a.fxDepreciation * 100,
       education_inflation_pct: a.educationInflation * 100,

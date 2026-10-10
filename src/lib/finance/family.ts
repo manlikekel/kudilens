@@ -1,5 +1,5 @@
 import type { FinanceData } from "./core";
-import { getAssumptions } from "./assumptions";
+import { getAssumptions, toNGN } from "./assumptions";
 
 export type Stage = "none" | "nursery" | "primary" | "secondary" | "university" | "done";
 
