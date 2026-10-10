@@ -3,6 +3,7 @@ import { useState, type ReactNode } from "react";
 import { Plus, Save, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/hooks/useAuth";
+import { SAVINGS_VEHICLES } from "@/lib/finance";
 import { type TableName, useFinance, useUpsertRow, useDeleteRow, useSaveProfile } from "@/lib/useFinance";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,7 +43,7 @@ function RecordsPage() {
 
 type Draft = Record<string, string | number | boolean | null>;
 
-const CURRENCIES = ["NGN", "USD"];
+const CURRENCIES = ["NGN", "USD", "GBP", "EUR", "CAD"];
 
 function Records() {
   const { user } = useAuth();
@@ -67,6 +68,8 @@ function Records() {
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="flex w-full flex-wrap">
           <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="accounts">Accounts</TabsTrigger>
+          <TabsTrigger value="assets">Property &amp; assets</TabsTrigger>
           <TabsTrigger value="family">Family</TabsTrigger>
           <TabsTrigger value="flows">Income &amp; spending</TabsTrigger>
           <TabsTrigger value="debts">Debts</TabsTrigger>
@@ -77,6 +80,41 @@ function Records() {
 
         <TabsContent value="profile">
           <ProfileSection data={data} />
+        </TabsContent>
+        <TabsContent value="accounts">
+          <Section
+            table="accounts"
+            userId={user.id}
+            rows={(data.accounts ?? []) as unknown as Draft[]}
+            defaults={{ name: "", kind: "bank", balance: 0, currency: cur, is_emergency_fund: false }}
+            fields={[
+              { key: "name", label: "Account (e.g. GTBank savings, Dom account)" },
+              { key: "kind", label: "Type", select: ["bank", "cash", "wallet", "domiciliary"] },
+              { key: "balance", label: "Balance", num: true },
+              { key: "currency", label: "Currency", select: CURRENCIES },
+              { key: "is_emergency_fund", label: "This is my emergency fund", bool: true },
+            ]}
+            title={(r) => String(r["name"]) || "New account"}
+            emptyText="No bank, cash or wallet accounts yet. Add them so forecasts start from your real cash."
+          />
+        </TabsContent>
+        <TabsContent value="assets">
+          <Section
+            table="assets"
+            userId={user.id}
+            rows={(data.assets ?? []) as unknown as Draft[]}
+            defaults={{ name: "", kind: "land", current_value: 0, currency: cur, appreciation: 10, liquid: false }}
+            fields={[
+              { key: "name", label: "Asset (e.g. Plot in Lugbe, Car, RSA pension)" },
+              { key: "kind", label: "Type", select: ["land", "property", "vehicle", "pension", "other"] },
+              { key: "current_value", label: "Current value", num: true },
+              { key: "currency", label: "Currency", select: CURRENCIES },
+              { key: "appreciation", label: "Expected growth %/yr (negative for cars)", num: true },
+              { key: "liquid", label: "Can be sold within a month", bool: true },
+            ]}
+            title={(r) => String(r["name"]) || "New asset"}
+            emptyText="No land, property, vehicles or pension recorded yet."
+          />
         </TabsContent>
         <TabsContent value="family">
           <Section
@@ -148,7 +186,7 @@ function Records() {
               {
                 key: "asset_class",
                 label: "Asset class",
-                select: ["stocks", "bonds", "real estate", "cash", "crypto", "pension", "business", "other"],
+                select: ["stocks", "bonds", "money market", "t-bills", "real estate", "cash", "crypto", "pension", "business", "other"],
               },
               { key: "current_value", label: "Current value", num: true },
               { key: "currency", label: "Currency", select: CURRENCIES },
@@ -165,13 +203,17 @@ function Records() {
             table="goals"
             userId={user.id}
             rows={(data.goals ?? []) as unknown as Draft[]}
-            defaults={{ name: "", target_amount: 0, currency: cur, target_year: new Date().getFullYear() + 5, current_saved: 0, monthly_contribution: 0, priority: 3 }}
+            defaults={{ name: "", target_amount: 0, currency: cur, target_year: new Date().getFullYear() + 5, target_month: 12, current_saved: 0, monthly_contribution: 0, priority: 3, saved_in: "money market", goal_inflation: null, linked_account_id: null }}
             fields={[
               { key: "name", label: "Goal (e.g. Canada relocation, House build)" },
               { key: "target_amount", label: "Target amount (today's prices)", num: true },
               { key: "currency", label: "Currency", select: CURRENCIES },
               { key: "target_year", label: "Target year", num: true },
-              { key: "current_saved", label: "Already saved", num: true },
+              { key: "target_month", label: "Target month (1–12)", num: true },
+              { key: "saved_in", label: "Money is saved in", choices: Object.entries(SAVINGS_VEHICLES).map(([k, v]) => [k, v.label]) },
+              { key: "goal_inflation", label: "Cost inflation %/yr (blank = general inflation)", num: true, nullable: true },
+              { key: "linked_account_id", label: "Linked account (uses its balance)", choices: [["", "Not linked"], ...(data.accounts ?? []).map((a) => [a.id, a.name] as [string, string])] },
+              { key: "current_saved", label: "Already saved (if not linked)", num: true },
               { key: "monthly_contribution", label: "Saving per month", num: true },
               { key: "priority", label: "Priority (1 = most important)", num: true },
             ]}
@@ -211,7 +253,6 @@ function ProfileSection({ data }: { data: NonNullable<ReturnType<typeof useFinan
     age: p?.age ?? 30,
     retirement_age: p?.retirement_age ?? 60,
     base_currency: p?.base_currency ?? "NGN",
-    usd_ngn_rate: p?.usd_ngn_rate ?? 1500,
     inflation_rate: p?.inflation_rate ?? 25,
     risk_tolerance: p?.risk_tolerance ?? "balanced",
     goals: p?.goals ?? "",
@@ -222,14 +263,32 @@ function ProfileSection({ data }: { data: NonNullable<ReturnType<typeof useFinan
     emergency_fund: p?.emergency_fund ?? 0,
     life_cover: p?.life_cover ?? 0,
     health_cover: p?.health_cover ?? 0,
+    inflation_fx_correlation: p?.inflation_fx_correlation ?? 0.6,
+    cash_yield_ratio: p?.cash_yield_ratio ?? 0.5,
+    foreign_inflation: p?.foreign_inflation ?? 3,
+    grow_contributions: p?.grow_contributions ?? true,
   });
+  const [overrides, setOverrides] = useState<Record<string, string>>(() =>
+    Object.fromEntries(Object.entries((p?.fx_overrides as Record<string, unknown>) ?? {}).map(([k, v]) => [k, String(v)])),
+  );
+  const official = Object.fromEntries((data.fxRates ?? []).map((r) => [r.currency, r]));
   const set = (k: string, v: Draft[string]) => setForm((f) => ({ ...f, [k]: v }));
 
   return (
     <section className="panel p-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">About you</h2>
-        <SaveButton busy={save.isPending} onSave={() => save.mutate(form)} />
+        <SaveButton
+          busy={save.isPending}
+          onSave={() =>
+            save.mutate({
+              ...form,
+              fx_overrides: Object.fromEntries(
+                Object.entries(overrides).filter(([, v]) => Number(v) > 0).map(([k, v]) => [k, Number(v)]),
+              ),
+            })
+          }
+        />
       </div>
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
         <Field label="Full name">
@@ -253,19 +312,31 @@ function ProfileSection({ data }: { data: NonNullable<ReturnType<typeof useFinan
             <SelectContent>
               {CURRENCIES.map((c) => (
                 <SelectItem key={c} value={c}>
-                  {c === "USD" ? "USD — US dollar" : "NGN — Naira"}
+                  {c}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </Field>
-        <Field label="Exchange rate (₦ per $1)">
-          <Input
-            type="number"
-            value={String(form["usd_ngn_rate"] ?? "")}
-            onChange={(e) => set("usd_ngn_rate", Number(e.target.value))}
-          />
-        </Field>
+        <div className="sm:col-span-2">
+          <Label className="text-xs text-muted-foreground">Exchange rates (units per $1). Leave blank to use the official rate.</Label>
+          <div className="mt-1.5 grid gap-2 sm:grid-cols-4">
+            {CURRENCIES.filter((c) => c !== "USD").map((c) => (
+              <div key={c}>
+                <Input
+                  type="number"
+                  placeholder={official[c] ? `Official ${Number(official[c].per_usd).toLocaleString()}` : "No official rate"}
+                  value={overrides[c] ?? ""}
+                  onChange={(e) => setOverrides((o) => ({ ...o, [c]: e.target.value }))}
+                />
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  {c}
+                  {official[c] ? ` · as of ${new Date(official[c].as_of).toLocaleDateString("en-GB")}` : ""}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
         <Field label="Expected inflation %/yr">
           <Input
             type="number"
@@ -293,12 +364,18 @@ function ProfileSection({ data }: { data: NonNullable<ReturnType<typeof useFinan
             ["emergency_fund", "Emergency fund saved"],
             ["life_cover", "Life insurance cover"],
             ["health_cover", "Health insurance cover / yr"],
+            ["foreign_inflation", "Foreign (USD/CAD) inflation %/yr"],
+            ["inflation_fx_correlation", "Inflation ↔ Naira correlation (−1 to 1)"],
+            ["cash_yield_ratio", "Cash earns this share of inflation (0–1)"],
           ] as const
         ).map(([k, label]) => (
           <Field key={k} label={label}>
             <Input type="number" value={String(form[k] ?? "")} onChange={(e) => set(k, Number(e.target.value))} />
           </Field>
         ))}
+        <Field label="Investment contributions rise with my salary">
+          <Switch checked={form["grow_contributions"] === true} onCheckedChange={(v) => set("grow_contributions", v)} />
+        </Field>
         <Field label="Income stability">
           <Select value={String(form["income_stability"])} onValueChange={(v) => set("income_stability", v)}>
             <SelectTrigger>
@@ -335,6 +412,8 @@ interface FieldSpec {
   bool?: boolean;
   area?: boolean;
   select?: string[];
+  choices?: [string, string][];
+  nullable?: boolean;
   list?: boolean;
 }
 
@@ -465,6 +544,19 @@ function FieldGrid({
                 ))}
               </SelectContent>
             </Select>
+          ) : f.choices ? (
+            <Select value={String(form[f.key] ?? "") || "__none"} onValueChange={(v) => set(f.key, v === "__none" ? null : v)}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {f.choices.map(([v, l]) => (
+                  <SelectItem key={v || "__none"} value={v || "__none"}>
+                    {l}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           ) : f.list ? (
             <Input
               defaultValue={Array.isArray(form[f.key]) ? (form[f.key] as unknown as number[]).join(", ") : ""}
@@ -481,7 +573,7 @@ function FieldGrid({
           ) : f.area ? (
             <Textarea className="min-h-16" value={String(form[f.key] ?? "")} onChange={(e) => set(f.key, e.target.value)} />
           ) : f.num ? (
-            <Input type="number" value={String(form[f.key] ?? "")} onChange={(e) => set(f.key, Number(e.target.value))} />
+            <Input type="number" value={String(form[f.key] ?? "")} onChange={(e) => set(f.key, f.nullable && e.target.value === "" ? null : Number(e.target.value))} />
           ) : (
             <Input value={String(form[f.key] ?? "")} onChange={(e) => set(f.key, e.target.value)} />
           )}
