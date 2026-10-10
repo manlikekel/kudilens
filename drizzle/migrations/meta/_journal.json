@@ -22,6 +22,13 @@
       "when": 1791555053393,
       "tag": "0002_corrections_balance_sheet_fx_goals",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791590706132,
+      "tag": "0003_enable_pg_cron_pg_net",
+      "breakpoints": true
     }
   ]
 }
