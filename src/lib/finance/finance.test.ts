@@ -12,7 +12,7 @@ import { aiSummary } from "./summary";
 const data: FinanceData = {
   profile: {
     id: "u", full_name: "Test", age: 35, retirement_age: 60, base_currency: "NGN",
-    usd_ngn_rate: 1500, inflation_rate: 20, risk_tolerance: "balanced", goals: null,
+    inflation_rate: 20, risk_tolerance: "balanced", goals: null,
     fx_depreciation: 15, education_inflation: 20, salary_growth: 10, income_stability: "stable",
   },
   debts: [
@@ -30,6 +30,12 @@ const data: FinanceData = {
   family: [{ id: "k", name: "Ada", relationship: "child", age: 4, dependent: true, monthly_cost: 50_000, currency: "NGN" }],
   goals: [{ id: "g", name: "Canada relocation", target_amount: 20_000, currency: "USD", target_year: new Date().getFullYear() + 3, current_saved: 0, monthly_contribution: 0, priority: 1 }],
   lumps: [{ id: "l", label: "School fees", amount: 900_000, currency: "NGN", months: [1, 5, 9] }],
+  fxRates: [
+    { currency: "NGN", per_usd: 1500, as_of: "2026-10-01T00:00:00Z" },
+    { currency: "GBP", per_usd: 0.8, as_of: "2026-10-01T00:00:00Z" },
+    { currency: "EUR", per_usd: 0.9, as_of: "2026-10-01T00:00:00Z" },
+    { currency: "CAD", per_usd: 1.25, as_of: "2026-10-01T00:00:00Z" },
+  ],
 };
 
 describe("debt optimiser", () => {
@@ -105,5 +111,130 @@ describe("stress & protection", () => {
 describe("AI summary", () => {
   it("never contains household names", () => {
     expect(JSON.stringify(aiSummary(data))).not.toContain("Ada");
+  });
+});
+
+/* ---------------- corrections pass ---------------- */
+import { buildRates, convert, formatMoney, missingCurrencies } from "./fx";
+import { addMoney, fromMinor, money, sumExact, toMinor } from "./money";
+import { getRates, summarize } from "./core";
+import { project, simulatePath } from "./engine";
+import { nonAmortisingDebts } from "./insights";
+import { analyzeGoals, goalTargetNGN, monthsUntil } from "./goals";
+import { getAssumptions } from "./assumptions";
+
+describe("money helpers", () => {
+  it("round-trips minor units and adds exactly", () => {
+    expect(toMinor(0.1) + toMinor(0.2)).toBe(30);
+    expect(fromMinor(12345)).toBe(123.45);
+    expect(sumExact([0.1, 0.2])).toBe(0.3);
+    expect(addMoney(money(1.5, "NGN"), money(2.25, "NGN")).minor).toBe(375);
+    expect(() => addMoney(money(1, "NGN"), money(1, "USD"))).toThrow();
+  });
+});
+
+describe("multi-currency conversion", () => {
+  const rates = getRates(data);
+  it("converts through USD for every pair", () => {
+    expect(convert(100, "USD", "NGN", rates)).toBe(150_000);
+    expect(convert(80, "GBP", "USD", rates)).toBeCloseTo(100);
+    expect(convert(125, "CAD", "NGN", rates)).toBeCloseTo(150_000);
+    expect(convert(90, "EUR", "GBP", rates)).toBeCloseTo(80);
+  });
+  it("never guesses a missing rate", () => {
+    const empty = buildRates([], {});
+    expect(convert(100, "NGN", "USD", empty)).toBe(0);
+    expect(missingCurrencies(["NGN", "GBP"], "USD", empty)).toEqual(["NGN", "GBP"]);
+  });
+  it("user override wins over the official rate", () => {
+    const r = buildRates(data.fxRates, { NGN: 1700 });
+    expect(convert(1, "USD", "NGN", r)).toBe(1700);
+    expect(r.overridden).toEqual(["NGN"]);
+  });
+  it("formats with the right symbol", () => {
+    expect(formatMoney(1500, "GBP", { compact: false })).toContain("£");
+    expect(formatMoney(1500, "NGN", { compact: false })).toContain("₦");
+  });
+});
+
+describe("balance sheet", () => {
+  const withSheet = {
+    ...data,
+    accounts: [{ id: "acc", name: "Bank", kind: "bank", balance: 2_000_000, currency: "NGN", is_emergency_fund: true }],
+    assets: [{ id: "as", name: "Land", kind: "land", current_value: 10_000_000, currency: "NGN", appreciation: 10, liquid: false }],
+  };
+  it("net worth includes accounts and assets", () => {
+    const s0 = summarize(data);
+    const s1 = summarize(withSheet);
+    expect(s1.netWorth - s0.netWorth).toBe(12_000_000);
+  });
+  it("runway uses only liquid money, not land", () => {
+    const s = summarize(withSheet);
+    // bank 2m + cash pot 1m; land and the bond are excluded
+    expect(s.liquidAssets).toBe(3_000_000);
+    expect(s.runwayMonths).toBeCloseTo(3_000_000 / (600_000 + 50_000 + 200_000));
+  });
+  it("monte carlo starts from real account balances", () => {
+    expect(simulatePath(withSheet, 1, null)[0]!.cash).toBe(2_000_000);
+  });
+});
+
+describe("engine", () => {
+  it("negative surplus draws down cash, then investments", () => {
+    const broke = {
+      ...data,
+      debts: [],
+      flows: [{ id: "f", label: "Living", flow_type: "expense", category: "x", monthly_amount: 300_000, currency: "NGN", growth_rate: 0 }],
+      accounts: [{ id: "a", name: "Bank", kind: "bank", balance: 1_000_000, currency: "NGN", is_emergency_fund: false }],
+    };
+    const p = simulatePath(broke, 2, null, { volScale: 0 });
+    expect(p[1]!.cash).toBeLessThanOrEqual(0.01);
+    expect(p[1]!.investments).toBeLessThan(p[0]!.investments);
+  });
+  it("project() median matches the Monte Carlo p50 within 10% at zero volatility", () => {
+    const det = project(data, 10, 0, 0);
+    const mc = monteCarlo(data, { years: 10, sims: 50, volScale: 0 });
+    const a = det[10]!.netWorth;
+    const b = mc.points[10]!.nominal[1];
+    expect(Math.abs(a - b) / Math.abs(b)).toBeLessThan(0.1);
+  });
+  it("USD pots pick up Naira depreciation in project()", () => {
+    const usdOnly = { ...data, debts: [], flows: [], family: [], investments: [data.investments[1]!] };
+    const p = project({ ...usdOnly, investments: [{ ...data.investments[1]!, expected_return: 0 }] }, 1, 0, 0);
+    expect(p[1]!.netWorth).toBeCloseTo(2_000 * 1500 * 1.15, -2);
+  });
+  it("flags a debt whose minimum never covers the interest", () => {
+    const bad = { ...data, debts: [{ ...data.debts[0]!, balance: 1_000_000, interest_rate: 36, minimum_payment: 20_000 }] };
+    expect(nonAmortisingDebts(bad).map((d) => d.id)).toEqual(["a"]);
+    expect(nonAmortisingDebts(data)).toHaveLength(0);
+  });
+});
+
+describe("goal corrections", () => {
+  const a = getAssumptions(data);
+  it("NGN goals grow with inflation", () => {
+    const house = { id: "h", name: "House", target_amount: 50_000_000, currency: "NGN", target_year: 2031, target_month: 12, current_saved: 0, monthly_contribution: 0, priority: 1 };
+    expect(goalTargetNGN(house, 60, a)).toBeCloseTo(50_000_000 * Math.pow(1.2, 5), -3);
+    expect(goalTargetNGN({ ...house, goal_inflation: 30 }, 60, a)).toBeCloseTo(50_000_000 * Math.pow(1.3, 5), -3);
+  });
+  it("CAD goals inflate abroad and convert at the weakened Naira", () => {
+    const cad = { id: "c", name: "Canada", target_amount: 10_000, currency: "CAD", target_year: 2028, current_saved: 0, monthly_contribution: 0, priority: 1 };
+    const expected = 10_000 * Math.pow(1.03, 2) * (1500 / 1.25) * Math.pow(1.15, 2);
+    expect(goalTargetNGN(cad, 24, a)).toBeCloseTo(expected, -2);
+  });
+  it("uses target month, so a December goal isn't 0 years away", () => {
+    const g = { id: "d", name: "Dec", target_amount: 1, currency: "NGN", target_year: 2026, target_month: 12, current_saved: 0, monthly_contribution: 0, priority: 1 };
+    expect(monthsUntil(g, new Date(2026, 9, 9))).toBe(2);
+  });
+  it("results are stable between runs", () => {
+    expect(analyzeGoals(data)[0]!.required).toEqual(analyzeGoals(data)[0]!.required);
+  });
+  it("a linked account supplies the starting balance", () => {
+    const linked = {
+      ...data,
+      accounts: [{ id: "acc", name: "Dom", kind: "domiciliary", balance: 5_000, currency: "USD", is_emergency_fund: false }],
+      goals: [{ ...data.goals![0]!, linked_account_id: "acc", current_saved: 999 }],
+    };
+    expect(analyzeGoals(linked)[0]!.startNGN).toBe(7_500_000);
   });
 });
