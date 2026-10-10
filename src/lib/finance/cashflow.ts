@@ -1,4 +1,4 @@
-import { summarize, type FinanceData } from "./core";
+import { LIQUID_CLASSES, summarize, type FinanceData } from "./core";
 import { getAssumptions, toNGN } from "./assumptions";
 
 export interface CashMonth {
@@ -31,9 +31,11 @@ export function forecastCash(data: FinanceData, start = new Date()): CashForecas
   const income = b(s.monthlyIncome);
   const regular = b(s.monthlyExpenses + s.familyCost + s.minimumDebtPayments + s.monthlyContributions);
   const cashPots = data.investments
-    .filter((i) => i.asset_class === "cash")
+    .filter((i) => LIQUID_CLASSES.has(i.asset_class))
     .reduce((t, i) => t + toNGN(i.current_value, i.currency, a), 0);
-  const startBalance = cashPots + toNGN(Number(data.profile?.emergency_fund ?? 0), s.currency, a);
+  const accounts = (data.accounts ?? []).reduce((t, x) => t + toNGN(x.balance, x.currency, a), 0);
+  // Old profile "emergency fund" figure is used only when no accounts are recorded (avoids double counting).
+  const startBalance = cashPots + (data.accounts?.length ? accounts : toNGN(Number(data.profile?.emergency_fund ?? 0), s.currency, a));
 
   const lumps = data.lumps ?? [];
   const sinkingBreakdown = lumps.map((l) => ({
@@ -70,6 +72,6 @@ export function forecastCash(data: FinanceData, start = new Date()): CashForecas
     sinkingBreakdown,
     negativeMonths: months.filter((m) => m.net < 0).length,
     formula:
-      "Each month: income − (expenses + family costs + minimum debt payments + investment contributions) − any lump sums due that month. Balance starts from your cash savings and emergency fund. Sinking fund = sum of yearly lump sums ÷ 12.",
+      "Each month: income − (expenses + family costs + minimum debt payments + investment contributions) − any lump sums due that month. Balance starts from your bank/cash accounts plus money-market and T-bill holdings. Sinking fund = sum of yearly lump sums ÷ 12.",
   };
 }
