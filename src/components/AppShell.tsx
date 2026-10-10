@@ -5,6 +5,28 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useFinance } from "@/lib/useFinance";
+import { getRates, missingCurrencies, rateLabel, usedCurrencies } from "@/lib/finance";
+
+/** Shows which exchange rates every converted figure uses, and warns when one is missing. */
+function RateBar({ userId }: { userId: string }) {
+  const { data, error } = useFinance(userId);
+  if (error) return <div className="bg-destructive/15 px-4 py-2 text-center text-xs text-destructive">Could not load your data: {error.message}</div>;
+  if (!data) return null;
+  const rates = getRates(data);
+  const base = data.profile?.base_currency ?? "NGN";
+  const missing = missingCurrencies([...usedCurrencies(data), "NGN"], base, rates);
+  return (
+    <div className="print:hidden">
+      {missing.length > 0 && (
+        <div className="bg-warning/15 px-4 py-2 text-center text-xs text-warning">
+          No exchange rate for {missing.join(", ")} — those amounts are left out of totals. Add a rate in My numbers → Profile.
+        </div>
+      )}
+      <p className="mx-auto max-w-6xl px-4 pt-2 text-right text-[11px] text-muted-foreground">{rateLabel(rates)}</p>
+    </div>
+  );
+}
 
 const nav = [
   { to: "/", label: "Dashboard", icon: LineChart },
@@ -68,7 +90,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Button>
         </div>
       </header>
-      <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
+      <RateBar userId={user.id} />
+      <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
     </div>
   );
 }
