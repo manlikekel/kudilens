@@ -7,7 +7,7 @@ import { useFinance } from "@/lib/useFinance";
 import {
   analyzeGoals, devaluationShock, educationForecast, emergencyFund, forecastCash, getAssumptions, goalCompetition,
   lifeEvents, monteCarlo, pickHorizons, protectionGaps, realReturns, recommendCurrencyMix, simulatePayoff, debtsAboveReturn,
-  summarize, toNGN, type FinanceData, type Strategy, type View,
+  summarize, toNGN, nonAmortisingDebts, type FinanceData, type Strategy, type View,
 } from "@/lib/finance";
 import { compact, Meaning, Num } from "@/components/kudi";
 import { Slider } from "@/components/ui/slider";
@@ -215,7 +215,8 @@ function Debts({ data }: { data: FinanceData }) {
     Snowball: results[1]!.timeline[m]?.balance ?? 0,
     Custom: results[2]!.timeline[m]?.balance ?? 0,
   }));
-  const flagged = debtsAboveReturn(debts, s.weightedReturn * 100 || 0);
+  const flagged = debtsAboveReturn(debts, s.weightedReturn || 0);
+  const never = nonAmortisingDebts(data);
   const date = (m: number) => new Date(new Date().getFullYear(), new Date().getMonth() + m).toLocaleDateString("en-GB", { month: "short", year: "numeric" });
   const move = (i: number, dir: -1 | 1) =>
     setCustom((c) => {
@@ -282,11 +283,24 @@ function Debts({ data }: { data: FinanceData }) {
           </LineChart>
         </ResponsiveContainer>
       </div>
+      {never.length > 0 && (
+        <div className="mt-4 space-y-1 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm">
+          {never.map((d) => (
+            <p key={d.id}>
+              <b>{d.name}</b> never gets paid off: the minimum payment doesn't cover the monthly interest of{" "}
+              <Num formula={`Balance × ${d.interest_rate}% ÷ 12 = ${Math.round(d.monthlyInterest).toLocaleString()} ${d.currency} a month, but the minimum payment is ${Number(d.minimum_payment).toLocaleString()}.`}>
+                {compact(d.monthlyInterest, d.currency)}
+              </Num>
+              .
+            </p>
+          ))}
+        </div>
+      )}
       {flagged.length > 0 && (
         <div className="mt-4 space-y-1 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm">
           {flagged.map((d) => (
             <p key={d.id}>
-              <b>{d.name}</b> costs {d.rate}% a year, more than your investments earn (~{(s.weightedReturn * 100).toFixed(1)}%). Pay this off before investing more.
+              <b>{d.name}</b> costs {d.rate}% a year, more than your investments earn (~{s.weightedReturn.toFixed(1)}%). Pay this off before investing more.
             </p>
           ))}
         </div>
@@ -458,6 +472,19 @@ function Stress({ data }: { data: FinanceData }) {
   );
 }
 
+function Runway({ data }: { data: FinanceData }) {
+  const s = summarize(data);
+  return (
+    <p className="mt-1 text-sm text-muted-foreground">
+      Cash you can reach quickly:{" "}
+      <Num formula="Bank, cash, wallet and domiciliary accounts + money-market and T-bill holdings. Land, property, pensions and other investments are left out because they can't be spent in an emergency. Months = this ÷ (living costs + family + minimum debt payments).">
+        {compact(s.liquidAssets, s.currency)}
+      </Num>{" "}
+      = {s.runwayMonths.toFixed(1)} months of essentials. Total net worth is {compact(s.netWorth, s.currency)}.
+    </p>
+  );
+}
+
 /* 7. Emergency & protection */
 function Protection({ data }: { data: FinanceData }) {
   const ef = emergencyFund(data);
@@ -468,6 +495,7 @@ function Protection({ data }: { data: FinanceData }) {
       <p className="text-sm">
         Recommended emergency fund: <Num formula={ef.formula}>{compact(ef.target)}</Num> ({ef.months} months). You have {compact(ef.current)}.
       </p>
+      <Runway data={data} />
       <div className="mt-2 h-2 rounded-full bg-secondary">
         <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
       </div>
