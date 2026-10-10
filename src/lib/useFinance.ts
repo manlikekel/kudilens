@@ -1,9 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { CashFlow, Debt, FamilyMember, FinanceData, Goal, Investment, LumpCost, Profile } from "./finance";
+import type { Account, Asset, CashFlow, Debt, FamilyMember, FinanceData, FxRateRow, Goal, Investment, LumpCost, Profile } from "./finance";
 
 async function loadFinance(userId: string): Promise<FinanceData> {
-  const [profile, debts, investments, flows, family, goals, lumps] = await Promise.all([
+  const [profile, debts, investments, flows, family, goals, lumps, accounts, assets, fx] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
     supabase.from("debts").select("*").eq("user_id", userId).order("created_at"),
     supabase.from("investments").select("*").eq("user_id", userId).order("created_at"),
@@ -11,10 +11,17 @@ async function loadFinance(userId: string): Promise<FinanceData> {
     supabase.from("family_members").select("*").eq("user_id", userId).order("created_at"),
     supabase.from("goals").select("*").eq("user_id", userId).order("target_year"),
     supabase.from("lump_costs").select("*").eq("user_id", userId).order("created_at"),
+    supabase.from("accounts").select("*").eq("user_id", userId).order("created_at"),
+    supabase.from("assets").select("*").eq("user_id", userId).order("created_at"),
+    supabase.from("fx_rates").select("*"),
   ]);
   const err =
-    profile.error || debts.error || investments.error || flows.error || family.error || goals.error || lumps.error;
-  if (err) throw new Error(err.message);
+    profile.error || debts.error || investments.error || flows.error || family.error || goals.error || lumps.error ||
+    accounts.error || assets.error || fx.error;
+  if (err) {
+    console.error("Could not load finance data", err);
+    throw new Error(err.message);
+  }
   return {
     profile: (profile.data as Profile | null) ?? null,
     debts: (debts.data ?? []) as Debt[],
@@ -23,6 +30,9 @@ async function loadFinance(userId: string): Promise<FinanceData> {
     family: (family.data ?? []) as FamilyMember[],
     goals: (goals.data ?? []) as Goal[],
     lumps: (lumps.data ?? []) as LumpCost[],
+    accounts: (accounts.data ?? []) as Account[],
+    assets: (assets.data ?? []) as Asset[],
+    fxRates: (fx.data ?? []) as FxRateRow[],
   };
 }
 
@@ -34,7 +44,7 @@ export function useFinance(userId: string | undefined) {
   });
 }
 
-export type TableName = "debts" | "investments" | "cash_flows" | "family_members" | "goals" | "lump_costs";
+export type TableName = "debts" | "investments" | "cash_flows" | "family_members" | "goals" | "lump_costs" | "accounts" | "assets";
 
 export function useUpsertRow(table: TableName, userId: string | undefined) {
   const qc = useQueryClient();
