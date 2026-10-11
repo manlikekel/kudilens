@@ -56,10 +56,10 @@ describe("debt optimiser", () => {
 
 describe("goals", () => {
   it("probability rises with contributions", () => {
-    expect(goalProbability(0, 500_000, 10_000_000, 2)).toBeGreaterThan(goalProbability(0, 100_000, 10_000_000, 2));
+    expect(goalProbability(0, 500_000, 10_000_000, 24)).toBeGreaterThan(goalProbability(0, 100_000, 10_000_000, 24));
   });
   it("required monthly for 90% exceeds 50%", () => {
-    expect(requiredMonthly(0, 10_000_000, 3, 0.9)).toBeGreaterThan(requiredMonthly(0, 10_000_000, 3, 0.5));
+    expect(requiredMonthly(0, 10_000_000, 36, 0.9, { mu: 0.18, sigma: 0.12 })).toBeGreaterThan(requiredMonthly(0, 10_000_000, 36, 0.5, { mu: 0.18, sigma: 0.12 }));
   });
 });
 

@@ -9,3 +9,5 @@
 - [x] Ask Kudi chat (replaces Advisor; chips, inline charts)
 - [x] My Ideas reviewer with verdicts + side-by-side compare
 - [x] Monthly review with PDF export (print)
+- [x] Corrections pass (branding, FX, accounts/assets, engine, goals, runway, robustness, tests)
+- [ ] Money columns as bigint minor units — blocked: column type changes aren't allowed on the live database
