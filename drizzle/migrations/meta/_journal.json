@@ -29,6 +29,13 @@
       "when": 1791590706132,
       "tag": "0003_enable_pg_cron_pg_net",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791788361662,
+      "tag": "0004_transactions_and_rules",
+      "breakpoints": true
     }
   ]
 }
