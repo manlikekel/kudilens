@@ -28,9 +28,20 @@ export const Route = createFileRoute("/api/review")({
             .limit(1)
             .maybeSingle();
           const netWorth = summarize(data).netWorth;
+          const lastStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().slice(0, 10);
+          const { data: lastTx } = await supabase
+            .from("transactions")
+            .select("txn_date, amount_minor, category")
+            .eq("user_id", userId)
+            .gte("txn_date", lastStart)
+            .lt("txn_date", `${period}-01`);
+          const lastMonth = monthlySpending(lastTx ?? [])[0];
+          const actual = lastMonth
+            ? `Actual spending last month from bank statements (NGN, by category): ${JSON.stringify(Object.fromEntries(Object.entries(lastMonth.byCategory).map(([k, v]) => [k, Math.round(v / 100)])))}; money in ${Math.round(lastMonth.incomeMinor / 100)}. Use these actuals rather than estimates for "last_month".`
+            : "No bank statement imported for last month; base last_month on estimates and say so.";
           const report = await completeJSON<Record<string, unknown>>(
             SYSTEM,
-            `Financial summary now:\n${JSON.stringify(aiSummary(data))}\n\nPrevious review (${prev?.period ?? "none"}): net worth ${prev?.net_worth ?? "unknown"}; moves suggested: ${JSON.stringify((prev?.report as { moves?: unknown } | null)?.moves ?? [])}`,
+            `Financial summary now:\n${JSON.stringify(aiSummary(data))}\n\n${actual}\n\nPrevious review (${prev?.period ?? "none"}): net worth ${prev?.net_worth ?? "unknown"}; moves suggested: ${JSON.stringify((prev?.report as { moves?: unknown } | null)?.moves ?? [])}`,
           );
           const { error } = await supabase
             .from("monthly_reviews")
