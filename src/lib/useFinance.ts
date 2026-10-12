@@ -14,6 +14,7 @@ async function loadFinance(userId: string): Promise<FinanceData> {
     supabase.from("accounts").select("*").eq("user_id", userId).order("created_at"),
     supabase.from("assets").select("*").eq("user_id", userId).order("created_at"),
     supabase.from("fx_rates").select("*"),
+    supabase.from("transactions").select("txn_date, amount_minor, category, currency").eq("user_id", userId).gte("txn_date", new Date(Date.now() - 400 * 86_400_000).toISOString().slice(0, 10)),
   ]);
   const err =
     profile.error || debts.error || investments.error || flows.error || family.error || goals.error || lumps.error ||

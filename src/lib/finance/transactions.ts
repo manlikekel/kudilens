@@ -288,3 +288,18 @@ export function averageActualSpend(months: MonthSpend[], today = new Date(), n =
   if (!complete.length) return { avgMinor: 0, months: 0 };
   return { avgMinor: Math.round(complete.reduce((t, m) => t + m.spendMinor, 0) / complete.length), months: complete.length };
 }
+
+import { buildRates, convert, type FxRateRow } from "./fx";
+
+/** Actual average monthly spend converted to Naira (major units) for the finance engine. */
+export function actualSpendNGN(
+  txns: Pick<Txn, "txn_date" | "amount_minor" | "category" | "currency">[],
+  fxRows: FxRateRow[] = [],
+  overrides: Record<string, unknown> = {},
+  today = new Date(),
+): { avgMonthly: number; months: number } {
+  const rates = buildRates(fxRows, overrides);
+  const ngn = txns.map((t) => ({ ...t, amount_minor: Math.round(convert(t.amount_minor, t.currency, "NGN", rates)) }));
+  const { avgMinor, months } = averageActualSpend(monthlySpending(ngn), today);
+  return { avgMonthly: avgMinor / 100, months };
+}

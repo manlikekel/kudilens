@@ -36,6 +36,7 @@ export async function loadData(supabase: Sb, userId: string): Promise<FinanceDat
     supabase.from("accounts").select("*").eq("user_id", userId),
     supabase.from("assets").select("*").eq("user_id", userId),
     supabase.from("fx_rates").select("*"),
+    supabase.from("transactions").select("txn_date, amount_minor, category, currency").eq("user_id", userId).gte("txn_date", new Date(Date.now() - 400 * 86_400_000).toISOString().slice(0, 10)),
   ]);
   const failed = results.find((r) => r.error);
   if (failed?.error) {
