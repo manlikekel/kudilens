@@ -1,9 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { actualSpendNGN } from "./finance";
 import type { Account, Asset, CashFlow, Debt, FamilyMember, FinanceData, FxRateRow, Goal, Investment, LumpCost, Profile } from "./finance";
 
 async function loadFinance(userId: string): Promise<FinanceData> {
-  const [profile, debts, investments, flows, family, goals, lumps, accounts, assets, fx] = await Promise.all([
+  const [profile, debts, investments, flows, family, goals, lumps, accounts, assets, fx, txns] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
     supabase.from("debts").select("*").eq("user_id", userId).order("created_at"),
     supabase.from("investments").select("*").eq("user_id", userId).order("created_at"),
@@ -18,7 +19,7 @@ async function loadFinance(userId: string): Promise<FinanceData> {
   ]);
   const err =
     profile.error || debts.error || investments.error || flows.error || family.error || goals.error || lumps.error ||
-    accounts.error || assets.error || fx.error;
+    accounts.error || assets.error || fx.error || txns.error;
   if (err) {
     console.error("Could not load finance data", err);
     throw new Error(err.message);
@@ -34,6 +35,7 @@ async function loadFinance(userId: string): Promise<FinanceData> {
     accounts: (accounts.data ?? []) as Account[],
     assets: (assets.data ?? []) as Asset[],
     fxRates: (fx.data ?? []) as FxRateRow[],
+    actualSpend: actualSpendNGN(txns.data ?? [], (fx.data ?? []) as FxRateRow[], ((profile.data as Profile | null)?.fx_overrides as Record<string, unknown>) ?? {}),
   };
 }
 
@@ -45,7 +47,7 @@ export function useFinance(userId: string | undefined) {
   });
 }
 
-export type TableName = "debts" | "investments" | "cash_flows" | "family_members" | "goals" | "lump_costs" | "accounts" | "assets";
+export type TableName = "transactions" | "category_rules" | "debts" | "investments" | "cash_flows" | "family_members" | "goals" | "lump_costs" | "accounts" | "assets";
 
 export function useUpsertRow(table: TableName, userId: string | undefined) {
   const qc = useQueryClient();
