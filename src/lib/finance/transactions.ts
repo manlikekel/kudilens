@@ -264,7 +264,7 @@ export interface MonthSpend {
 }
 
 /** Transfers between own accounts and savings are not "spending". */
-const NOT_SPEND = new Set(["Transfers", "Savings & investing"]);
+const NOT_SPEND = new Set(["Transfers", "Savings & investing", "Debt repayment"]);
 
 export function monthlySpending(txns: Pick<Txn, "txn_date" | "amount_minor" | "category">[]): MonthSpend[] {
   const map = new Map<string, MonthSpend>();

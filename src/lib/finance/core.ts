@@ -125,6 +125,8 @@ export interface FinanceData {
   accounts?: Account[];
   assets?: Asset[];
   fxRates?: FxRateRow[];
+  /** Average actual monthly spending in Naira from imported transactions (excludes transfers, savings and debt repayments). */
+  actualSpend?: { avgMonthly: number; months: number };
 }
 
 /** Official rates merged with the user's own overrides. */

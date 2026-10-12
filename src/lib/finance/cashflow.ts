@@ -18,6 +18,7 @@ export interface CashForecast {
   sinkingFund: number; // monthly amount to set aside for lump sums
   sinkingBreakdown: { label: string; monthly: number }[];
   negativeMonths: number;
+  usesActual: boolean;
   formula: string;
 }
 
@@ -29,7 +30,11 @@ export function forecastCash(data: FinanceData, start = new Date()): CashForecas
   const s = summarize(data);
   const b = (x: number) => toNGN(x, s.currency, a);
   const income = b(s.monthlyIncome);
-  const regular = b(s.monthlyExpenses + s.familyCost + s.minimumDebtPayments + s.monthlyContributions);
+  const manualSpend = b(s.monthlyExpenses + s.familyCost);
+  // Real spending from imported statements replaces the manual estimate once at least one full month exists.
+  const usesActual = (data.actualSpend?.months ?? 0) > 0;
+  const living = usesActual ? data.actualSpend!.avgMonthly : manualSpend;
+  const regular = living + b(s.minimumDebtPayments + s.monthlyContributions);
   const cashPots = data.investments
     .filter((i) => LIQUID_CLASSES.has(i.asset_class))
     .reduce((t, i) => t + toNGN(i.current_value, i.currency, a), 0);
@@ -71,7 +76,9 @@ export function forecastCash(data: FinanceData, start = new Date()): CashForecas
     sinkingFund,
     sinkingBreakdown,
     negativeMonths: months.filter((m) => m.net < 0).length,
+    usesActual,
     formula:
+      (usesActual ? `Living costs use your actual average spending over the last ${data.actualSpend!.months} full month(s) from imported statements. ` : "") +
       "Each month: income − (expenses + family costs + minimum debt payments + investment contributions) − any lump sums due that month. Balance starts from your bank/cash accounts plus money-market and T-bill holdings. Sinking fund = sum of yearly lump sums ÷ 12.",
   };
 }
