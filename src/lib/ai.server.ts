@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
-import type { FinanceData } from "@/lib/finance";
+import { actualSpendNGN, type FinanceData } from "@/lib/finance";
 
 export const KUDI_TONE = `You are Kudi, the analyst inside KudiLens, a personal-finance app for a salaried professional in Nigeria with money in NGN and USD.
 Tone: direct and warm, like a smart friend who happens to be a financial analyst. Explain any jargon in plain words the first time you use it.
@@ -36,13 +36,14 @@ export async function loadData(supabase: Sb, userId: string): Promise<FinanceDat
     supabase.from("accounts").select("*").eq("user_id", userId),
     supabase.from("assets").select("*").eq("user_id", userId),
     supabase.from("fx_rates").select("*"),
+    supabase.from("transactions").select("txn_date, amount_minor, category, currency").eq("user_id", userId).gte("txn_date", new Date(Date.now() - 400 * 86_400_000).toISOString().slice(0, 10)),
   ]);
   const failed = results.find((r) => r.error);
   if (failed?.error) {
     console.error("loadData failed", failed.error);
     throw new AIError(500, `Could not load your data: ${failed.error.message}`);
   }
-  const [profile, debts, investments, flows, family, goals, lumps, accounts, assets, fx] = results.map((r) => r.data);
+  const [profile, debts, investments, flows, family, goals, lumps, accounts, assets, fx, txns] = results.map((r) => r.data);
   return {
     profile,
     debts: debts ?? [],
@@ -54,6 +55,7 @@ export async function loadData(supabase: Sb, userId: string): Promise<FinanceDat
     accounts: accounts ?? [],
     assets: assets ?? [],
     fxRates: fx ?? [],
+    actualSpend: actualSpendNGN((txns ?? []) as never[], (fx ?? []) as never[], ((profile as { fx_overrides?: Record<string, unknown> } | null)?.fx_overrides) ?? {}),
   } as unknown as FinanceData;
 }
 

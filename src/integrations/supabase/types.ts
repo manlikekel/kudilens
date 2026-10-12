@@ -197,6 +197,30 @@ export type Database = {
         }
         Relationships: []
       }
+      category_rules: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          pattern: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          pattern: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          pattern?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       debts: {
         Row: {
           balance: number
@@ -559,6 +583,65 @@ export type Database = {
           usd_ngn_rate?: number
         }
         Relationships: []
+      }
+      transactions: {
+        Row: {
+          account_id: string | null
+          amount_minor: number
+          category: string
+          created_at: string
+          currency: string
+          dedupe_key: string
+          description: string | null
+          id: string
+          is_recurring: boolean
+          merchant: string
+          notes: string | null
+          source: string
+          txn_date: string
+          user_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          amount_minor: number
+          category?: string
+          created_at?: string
+          currency?: string
+          dedupe_key: string
+          description?: string | null
+          id?: string
+          is_recurring?: boolean
+          merchant?: string
+          notes?: string | null
+          source?: string
+          txn_date: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string | null
+          amount_minor?: number
+          category?: string
+          created_at?: string
+          currency?: string
+          dedupe_key?: string
+          description?: string | null
+          id?: string
+          is_recurring?: boolean
+          merchant?: string
+          notes?: string | null
+          source?: string
+          txn_date?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

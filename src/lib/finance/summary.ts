@@ -57,6 +57,9 @@ export function aiSummary(data: FinanceData) {
       savings_rate_pct: r(s.savingsRate * 100),
       lines: data.flows.map((f) => ({ type: f.flow_type, category: f.category, label: f.label, amount: f.monthly_amount, currency: f.currency })),
       lump_costs: (data.lumps ?? []).map((l) => ({ label: l.label, amount: l.amount, currency: l.currency, months: l.months })),
+      actual_spending_ngn: data.actualSpend?.months
+        ? { avg_monthly: r(data.actualSpend.avgMonthly), full_months_of_statements: data.actualSpend.months }
+        : "no statements imported — expenses above are the user's estimates",
     },
     accounts: (data.accounts ?? []).map((x) => ({ name: x.name, kind: x.kind, balance: x.balance, currency: x.currency, emergency_fund: x.is_emergency_fund })),
     assets: (data.assets ?? []).map((x) => ({ name: x.name, kind: x.kind, value: x.current_value, currency: x.currency, appreciation_pct: x.appreciation, liquid: x.liquid })),
