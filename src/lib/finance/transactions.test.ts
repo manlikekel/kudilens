@@ -56,8 +56,8 @@ describe("recurring + monthly spend", () => {
   it("detects monthly subscriptions and ignores irregular spending", () => {
     const r = detectRecurring(tx);
     expect(r.map((x) => x.merchant)).toEqual(["DSTV"]);
-    expect(r[0].isSubscription).toBe(true);
-    expect(r[0].typicalMinor).toBe(2900000);
+    expect(r[0]!.isSubscription).toBe(true);
+    expect(r[0]!.typicalMinor).toBe(2900000);
   });
   it("monthly spend excludes savings transfers; average excludes current month", () => {
     const m = monthlySpending(tx);
@@ -73,6 +73,6 @@ describe("recurring + monthly spend", () => {
     const act = forecastCash({ ...(base as object), actualSpend: { avgMonthly: 350000, months: 3 } } as never);
     expect(est.usesActual).toBe(false);
     expect(act.usesActual).toBe(true);
-    expect(est.months[0].regular - act.months[0].regular).toBeCloseTo(-150000);
+    expect(est.months[0]!.regular - act.months[0]!.regular).toBeCloseTo(-150000);
   });
 });

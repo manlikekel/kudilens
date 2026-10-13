@@ -115,13 +115,13 @@ export function parseDate(raw: string | undefined): string | null {
   const fix = (y: number) => (y < 100 ? 2000 + y : y);
   const valid = (y: number, m: number, d: number) => m >= 1 && m <= 12 && d >= 1 && d <= 31 ? `${y}-${pad(m)}-${pad(d)}` : null;
   let m = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
-  if (m) return valid(+m[1], +m[2], +m[3]);
+  if (m) return valid(+m[1]!, +m[2]!, +m[3]!);
   m = s.match(/^(\d{1,2})[-/. ]([A-Za-z]{3,4})[-/. ,]*(\d{2,4})/);
-  if (m && MONTHS[m[2].toLowerCase()]) return valid(fix(+m[3]), MONTHS[m[2].toLowerCase()], +m[1]);
+  if (m && MONTHS[m[2]!.toLowerCase()]!) return valid(fix(+m[3]!), MONTHS[m[2]!.toLowerCase()]!, +m[1]!);
   m = s.match(/^([A-Za-z]{3,4})[-/. ](\d{1,2}),?[-/. ](\d{2,4})/);
-  if (m && MONTHS[m[1].toLowerCase()]) return valid(fix(+m[3]), MONTHS[m[1].toLowerCase()], +m[2]);
+  if (m && MONTHS[m[1]!.toLowerCase()]!) return valid(fix(+m[3]!), MONTHS[m[1]!.toLowerCase()]!, +m[2]!);
   m = s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})/);
-  if (m) return valid(fix(+m[3]), +m[2], +m[1]); // day first
+  if (m) return valid(fix(+m[3]!), +m[2]!, +m[1]!); // day first
   return null;
 }
 
@@ -129,7 +129,7 @@ export function parseDate(raw: string | undefined): string | null {
 export function cleanMerchant(desc: string): string {
   return desc
     .toUpperCase()
-    .replace(/\b(POS|WEB|NIP|USSD|TRF|TRANSFER|PURCHASE|PAYMENT|PMT|FRM|FROM|TO|VIA|AT|@|REF|REFERENCE|SESSION|ID|NO)\b[:.]?/g, " ")
+    .replace(/@/g, " ").replace(/\b(POS|WEB|NIP|USSD|TRF|TRANSFER|PURCHASE|PAYMENT|PMT|FRM|FROM|TO|VIA|AT|@|REF|REFERENCE|SESSION|ID|NO)\b[:.]?/g, " ")
     .replace(/[A-Z]*\d{5,}[A-Z\d]*/g, " ")
     .replace(/[/|*#:_-]+/g, " ")
     .replace(/\s+/g, " ")
