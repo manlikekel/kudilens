@@ -115,13 +115,13 @@ export function parseDate(raw: string | undefined): string | null {
   const fix = (y: number) => (y < 100 ? 2000 + y : y);
   const valid = (y: number, m: number, d: number) => m >= 1 && m <= 12 && d >= 1 && d <= 31 ? `${y}-${pad(m)}-${pad(d)}` : null;
   let m = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
-  if (m) return valid(+m[1], +m[2], +m[3]);
+  if (m) return valid(+m[1]!, +m[2]!, +m[3]!);
   m = s.match(/^(\d{1,2})[-/. ]([A-Za-z]{3,4})[-/. ,]*(\d{2,4})/);
-  if (m && MONTHS[m[2].toLowerCase()]) return valid(fix(+m[3]), MONTHS[m[2].toLowerCase()], +m[1]);
+  if (m && MONTHS[m[2]!.toLowerCase()]!) return valid(fix(+m[3]!), MONTHS[m[2]!.toLowerCase()]!, +m[1]!);
   m = s.match(/^([A-Za-z]{3,4})[-/. ](\d{1,2}),?[-/. ](\d{2,4})/);
-  if (m && MONTHS[m[1].toLowerCase()]) return valid(fix(+m[3]), MONTHS[m[1].toLowerCase()], +m[2]);
+  if (m && MONTHS[m[1]!.toLowerCase()]!) return valid(fix(+m[3]!), MONTHS[m[1]!.toLowerCase()]!, +m[2]!);
   m = s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})/);
-  if (m) return valid(fix(+m[3]), +m[2], +m[1]); // day first
+  if (m) return valid(fix(+m[3]!), +m[2]!, +m[1]!); // day first
   return null;
 }
 
@@ -129,7 +129,7 @@ export function parseDate(raw: string | undefined): string | null {
 export function cleanMerchant(desc: string): string {
   return desc
     .toUpperCase()
-    .replace(/\b(POS|WEB|NIP|USSD|TRF|TRANSFER|PURCHASE|PAYMENT|PMT|FRM|FROM|TO|VIA|AT|@|REF|REFERENCE|SESSION|ID|NO)\b[:.]?/g, " ")
+    .replace(/@/g, " ").replace(/\b(POS|WEB|NIP|USSD|TRF|TRANSFER|PURCHASE|PAYMENT|PMT|FRM|FROM|TO|VIA|AT|@|REF|REFERENCE|SESSION|ID|NO)\b[:.]?/g, " ")
     .replace(/[A-Z]*\d{5,}[A-Z\d]*/g, " ")
     .replace(/[/|*#:_-]+/g, " ")
     .replace(/\s+/g, " ")
@@ -234,13 +234,13 @@ export function detectRecurring(txns: Pick<Txn, "txn_date" | "amount_minor" | "m
     if (list.length < 2) continue;
     const sorted = [...list].sort((a, b) => a.txn_date.localeCompare(b.txn_date));
     const amounts = sorted.map((t) => -t.amount_minor).sort((a, b) => a - b);
-    const median = amounts[Math.floor(amounts.length / 2)];
+    const median = amounts[Math.floor(amounts.length / 2)] ?? 0;
     const similar = sorted.filter((t) => Math.abs(-t.amount_minor - median) <= median * 0.15);
     if (similar.length < 2) continue;
-    const gaps = similar.slice(1).map((t, i) => daysBetween(similar[i].txn_date, t.txn_date));
+    const gaps = similar.slice(1).map((t, i) => daysBetween(similar[i]!.txn_date, t.txn_date));
     const monthlyGaps = gaps.filter((g) => g >= 25 && g <= 35).length;
     if (monthlyGaps < Math.max(1, Math.ceil(gaps.length * 0.6))) continue;
-    const last = similar[similar.length - 1];
+    const last = similar[similar.length - 1]!;
     const next = new Date(Date.parse(last.txn_date) + 30 * 86_400_000).toISOString().slice(0, 10);
     out.push({
       merchant,

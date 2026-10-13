@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
-import { LineChart, MessageCircle, Table2, LogOut, Compass, Bell, Lightbulb, FileText } from "lucide-react";
+import { LineChart, MessageCircle, Table2, LogOut, Compass, Bell, Lightbulb, FileText, Receipt } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ function RateBar({ userId }: { userId: string }) {
 const nav = [
   { to: "/", label: "Dashboard", icon: LineChart },
   { to: "/plan", label: "Plan", icon: Compass },
+  { to: "/spending", label: "Spending", icon: Receipt },
   { to: "/insights", label: "Insights", icon: Bell },
   { to: "/ideas", label: "My Ideas", icon: Lightbulb },
   { to: "/advisor", label: "Ask Kudi", icon: MessageCircle },
