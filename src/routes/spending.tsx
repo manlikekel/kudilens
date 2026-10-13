@@ -46,11 +46,12 @@ const sel = "h-9 rounded-md border border-input bg-background px-2 text-sm";
 
 function SpendingPage() {
   const { user } = useAuth();
-  const uid = user!.id;
+  const uid = user?.id ?? "";
   const qc = useQueryClient();
   const { data: fin } = useFinance(uid);
   const txQ = useQuery({
     queryKey: ["txns", uid],
+    enabled: !!uid,
     queryFn: async () => {
       const { data, error } = await supabase.from("transactions").select("*").eq("user_id", uid).order("txn_date", { ascending: false }).limit(2000);
       if (error) throw new Error(error.message);
@@ -59,6 +60,7 @@ function SpendingPage() {
   });
   const rulesQ = useQuery({
     queryKey: ["rules", uid],
+    enabled: !!uid,
     queryFn: async () => {
       const { data, error } = await supabase.from("category_rules").select("*").eq("user_id", uid).order("created_at");
       if (error) throw new Error(error.message);
