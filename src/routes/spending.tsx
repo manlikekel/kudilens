@@ -103,7 +103,7 @@ function SpendingPage() {
 function Overview({ months, usesActual }: { months: ReturnType<typeof monthlySpending>; usesActual: boolean }) {
   if (!months.length)
     return <Card><CardContent className="p-6 text-sm text-muted-foreground">No transactions yet. Import a bank statement so your forecasts use what you really spend, not estimates.</CardContent></Card>;
-  const last = months[months.length - 1];
+  const last = months[months.length - 1]!;
   const chart = months.slice(-12).map((m) => ({ month: m.month, spend: m.spendMinor / 100, income: m.incomeMinor / 100 }));
   const cats = Object.entries(last.byCategory).sort((a, b) => b[1] - a[1]);
   return (
@@ -186,7 +186,7 @@ function Importer({ uid, accounts, rules, onDone }: { uid: string; accounts: { i
       if (unknown.length) {
         try {
           const { categories } = await callApi<{ categories: Record<string, string> }>("/api/categorise", { merchants: unknown });
-          txns = txns.map((t) => (t.category === "Uncategorised" && categories[t.merchant] ? { ...t, category: categories[t.merchant] } : t));
+          txns = txns.map((t) => (t.category === "Uncategorised" && categories[t.merchant] ? { ...t, category: categories[t.merchant]! } : t));
         } catch (e) {
           toast.message(`Imported without AI categories: ${(e as Error).message}`);
         }
@@ -340,8 +340,9 @@ function Rules({ uid, rules, txns, onChange }: { uid: string; rules: (CategoryRu
   const [category, setCategory] = useState<string>("Groceries");
   async function add() {
     if (!pattern.trim()) return;
+    void 0;
     const { error } = await supabase.from("category_rules").insert({ user_id: uid, pattern: pattern.trim(), category });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     // Re-apply to existing transactions that match.
     const all = [...rules, { pattern: pattern.trim(), category }];
     const changed = txns.filter((t) => applyRules(t.merchant, t.description ?? "", t.amount_minor, [{ pattern: pattern.trim(), category }]) === category && t.category !== category && applyRules(t.merchant, t.description ?? "", t.amount_minor, all) === category);

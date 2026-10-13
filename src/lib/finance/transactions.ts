@@ -234,13 +234,13 @@ export function detectRecurring(txns: Pick<Txn, "txn_date" | "amount_minor" | "m
     if (list.length < 2) continue;
     const sorted = [...list].sort((a, b) => a.txn_date.localeCompare(b.txn_date));
     const amounts = sorted.map((t) => -t.amount_minor).sort((a, b) => a - b);
-    const median = amounts[Math.floor(amounts.length / 2)];
+    const median = amounts[Math.floor(amounts.length / 2)] ?? 0;
     const similar = sorted.filter((t) => Math.abs(-t.amount_minor - median) <= median * 0.15);
     if (similar.length < 2) continue;
-    const gaps = similar.slice(1).map((t, i) => daysBetween(similar[i].txn_date, t.txn_date));
+    const gaps = similar.slice(1).map((t, i) => daysBetween(similar[i]!.txn_date, t.txn_date));
     const monthlyGaps = gaps.filter((g) => g >= 25 && g <= 35).length;
     if (monthlyGaps < Math.max(1, Math.ceil(gaps.length * 0.6))) continue;
-    const last = similar[similar.length - 1];
+    const last = similar[similar.length - 1]!;
     const next = new Date(Date.parse(last.txn_date) + 30 * 86_400_000).toISOString().slice(0, 10);
     out.push({
       merchant,

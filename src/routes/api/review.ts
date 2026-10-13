@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { aiSummary, summarize } from "@/lib/finance";
+import { aiSummary, monthlySpending, summarize } from "@/lib/finance";
 import { authed, completeJSON, errorResponse, KUDI_TONE, loadData } from "@/lib/ai.server";
 
 const SYSTEM = `${KUDI_TONE}
@@ -37,7 +37,7 @@ export const Route = createFileRoute("/api/review")({
             .lt("txn_date", `${period}-01`);
           const lastMonth = monthlySpending(lastTx ?? [])[0];
           const actual = lastMonth
-            ? `Actual spending last month from bank statements (NGN, by category): ${JSON.stringify(Object.fromEntries(Object.entries(lastMonth.byCategory).map(([k, v]) => [k, Math.round(v / 100)])))}; money in ${Math.round(lastMonth.incomeMinor / 100)}. Use these actuals rather than estimates for "last_month".`
+            ? `Actual spending last month from bank statements (NGN, by category): ${JSON.stringify(Object.fromEntries(Object.entries(lastMonth.byCategory).map(([k, v]) => [k, Math.round(Number(v) / 100)])))}; money in ${Math.round(lastMonth.incomeMinor / 100)}. Use these actuals rather than estimates for "last_month".`
             : "No bank statement imported for last month; base last_month on estimates and say so.";
           const report = await completeJSON<Record<string, unknown>>(
             SYSTEM,
