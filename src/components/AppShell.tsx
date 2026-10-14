@@ -9,6 +9,7 @@ import {
   FileDown,
   FileText,
   Home,
+  LifeBuoy,
   Lightbulb,
   LogOut,
   MessageCircle,
@@ -29,6 +30,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { cn } from "@/lib/utils";
 import { useFinance } from "@/lib/useFinance";
 import { useInstall } from "@/lib/pwa";
+import { Tour } from "@/components/Tour";
 import { usePrivacy } from "@/lib/privacy";
 import { useAppLock } from "@/lib/applock";
 import { LockScreen, SecondStepScreen, useNeedsSecondStep } from "@/components/Security";
@@ -93,6 +95,7 @@ const groups: { label: string; items: NavItem[] }[] = [
     items: [
       { to: "/records", label: "My numbers", icon: Table2 },
       { to: "/settings", label: "Settings", icon: Settings },
+      { to: "/guide", label: "How KudiLens works", short: "Guide", icon: LifeBuoy },
     ],
   },
 ];
@@ -178,6 +181,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
         <button
+          data-tour="privacy"
           onClick={() => setHidden(!hidden)}
           aria-pressed={hidden}
           className="mb-2 flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
@@ -226,6 +230,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Button
               variant="ghost"
               size="icon"
+              data-tour="privacy"
               onClick={() => setHidden(!hidden)}
               aria-pressed={hidden}
               aria-label={hidden ? "Show amounts" : "Hide amounts"}
@@ -273,6 +278,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           ))}
           <li>
             <button
+              data-tour="nav-more"
               onClick={() => setMoreOpen(true)}
               className={cn(
                 "flex h-14 w-full flex-col items-center justify-center gap-0.5 rounded-[22px] text-[11px] font-medium text-muted-foreground transition-colors active:scale-95",
@@ -346,14 +352,18 @@ export function AppShell({ children }: { children: ReactNode }) {
       </Sheet>
 
       <InstallBanner mode={installMode} onInstall={onInstall} />
+      <Tour />
     </div>
   );
 }
+
+const tourKey = (to: string) => `nav-${to.replace("/", "") || "home"}`;
 
 function SideLink({ item, active }: { item: NavItem; active: boolean }) {
   return (
     <Link
       to={item.to}
+      data-tour={tourKey(item.to)}
       className={cn(
         "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
         active && "bg-primary/12 text-foreground",
@@ -370,6 +380,7 @@ function TabLink({ item, active }: { item: NavItem; active: boolean }) {
   return (
     <Link
       to={item.to}
+      data-tour={tourKey(item.to)}
       className={cn(
         "relative flex h-14 flex-col items-center justify-center gap-0.5 rounded-[22px] text-[11px] font-medium text-muted-foreground transition-[background-color,color,transform] duration-200 active:scale-95",
         active && "bg-primary/14 text-primary",

@@ -43,6 +43,7 @@ import { useRecentTxns, useRecordSnapshot, useSnapshots } from "@/lib/useGrowth"
 import { SafeToSpend } from "@/components/dashboard/SafeToSpend";
 import { InsightsSection } from "@/components/dashboard/InsightsSection";
 import { onboarded } from "@/lib/onboarding";
+import { startTour, tourSeen } from "@/lib/tour";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -112,6 +113,12 @@ function Dashboard() {
   useEffect(() => {
     if (isEmpty && !onboarded()) navigate({ to: "/welcome" });
   }, [isEmpty, navigate]);
+  // first visit with numbers in place: show the tour once
+  useEffect(() => {
+    if (!data || isEmpty || tourSeen()) return;
+    const t = setTimeout(startTour, 900);
+    return () => clearTimeout(t);
+  }, [data, isEmpty]);
 
   if (isLoading) return <p className="text-muted-foreground">Crunching your numbers…</p>;
   if (error) return <p className="text-destructive">Could not load data: {error.message}</p>;
@@ -154,7 +161,10 @@ function Dashboard() {
 
   return (
     <div className="space-y-6 lg:space-y-8">
-      <section className="hero-surface relative overflow-hidden rounded-[28px] p-6 shadow-[0_24px_60px_-30px_oklch(0.2_0.05_200/0.8)] sm:p-8">
+      <section
+        data-tour="hero"
+        className="hero-surface relative overflow-hidden rounded-[28px] p-6 shadow-[0_24px_60px_-30px_oklch(0.2_0.05_200/0.8)] sm:p-8"
+      >
         <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">
             <p className="text-sm text-white/70">
