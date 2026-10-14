@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
-import { LineChart, MessageCircle, Table2, LogOut, Compass, Bell, Lightbulb, FileText, Receipt } from "lucide-react";
+import { LineChart, MessageCircle, Table2, LogOut, Compass, Bell, Lightbulb, FileText, Receipt, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,7 @@ const nav = [
   { to: "/advisor", label: "Ask Kudi", icon: MessageCircle },
   { to: "/review", label: "Review", icon: FileText },
   { to: "/records", label: "My numbers", icon: Table2 },
+  { to: "/settings", label: "Settings", icon: Settings },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
