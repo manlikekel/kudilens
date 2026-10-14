@@ -16,10 +16,13 @@ import { Route as IdeasRouteImport } from './routes/ideas'
 import { Route as InsightsRouteImport } from './routes/insights'
 import { Route as InvestRouteImport } from './routes/invest'
 import { Route as PlanRouteImport } from './routes/plan'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RecordsRouteImport } from './routes/records'
 import { Route as ReviewRouteImport } from './routes/review'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SpendingRouteImport } from './routes/spending'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as ApiAccountRouteImport } from './routes/api/account'
 import { Route as ApiAdvisorRouteImport } from './routes/api/advisor'
 import { Route as ApiCategoriseRouteImport } from './routes/api/categorise'
 import { Route as ApiFundsRouteImport } from './routes/api/funds'
@@ -64,6 +67,11 @@ const PlanRoute = PlanRouteImport.update({
   path: '/plan',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecordsRoute = RecordsRouteImport.update({
   id: '/records',
   path: '/records',
@@ -82,6 +90,16 @@ const SettingsRoute = SettingsRouteImport.update({
 const SpendingRoute = SpendingRouteImport.update({
   id: '/spending',
   path: '/spending',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAccountRoute = ApiAccountRouteImport.update({
+  id: '/api/account',
+  path: '/api/account',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAdvisorRoute = ApiAdvisorRouteImport.update({
@@ -133,10 +151,13 @@ export interface FileRoutesByFullPath {
   '/insights': typeof InsightsRoute
   '/invest': typeof InvestRoute
   '/plan': typeof PlanRoute
+  '/privacy': typeof PrivacyRoute
   '/records': typeof RecordsRoute
   '/review': typeof ReviewRoute
   '/settings': typeof SettingsRoute
   '/spending': typeof SpendingRoute
+  '/terms': typeof TermsRoute
+  '/api/account': typeof ApiAccountRoute
   '/api/advisor': typeof ApiAdvisorRoute
   '/api/categorise': typeof ApiCategoriseRoute
   '/api/funds': typeof ApiFundsRoute
@@ -154,10 +175,13 @@ export interface FileRoutesByTo {
   '/insights': typeof InsightsRoute
   '/invest': typeof InvestRoute
   '/plan': typeof PlanRoute
+  '/privacy': typeof PrivacyRoute
   '/records': typeof RecordsRoute
   '/review': typeof ReviewRoute
   '/settings': typeof SettingsRoute
   '/spending': typeof SpendingRoute
+  '/terms': typeof TermsRoute
+  '/api/account': typeof ApiAccountRoute
   '/api/advisor': typeof ApiAdvisorRoute
   '/api/categorise': typeof ApiCategoriseRoute
   '/api/funds': typeof ApiFundsRoute
@@ -176,10 +200,13 @@ export interface FileRoutesById {
   '/insights': typeof InsightsRoute
   '/invest': typeof InvestRoute
   '/plan': typeof PlanRoute
+  '/privacy': typeof PrivacyRoute
   '/records': typeof RecordsRoute
   '/review': typeof ReviewRoute
   '/settings': typeof SettingsRoute
   '/spending': typeof SpendingRoute
+  '/terms': typeof TermsRoute
+  '/api/account': typeof ApiAccountRoute
   '/api/advisor': typeof ApiAdvisorRoute
   '/api/categorise': typeof ApiCategoriseRoute
   '/api/funds': typeof ApiFundsRoute
@@ -199,10 +226,13 @@ export interface FileRouteTypes {
     | '/insights'
     | '/invest'
     | '/plan'
+    | '/privacy'
     | '/records'
     | '/review'
     | '/settings'
     | '/spending'
+    | '/terms'
+    | '/api/account'
     | '/api/advisor'
     | '/api/categorise'
     | '/api/funds'
@@ -220,10 +250,13 @@ export interface FileRouteTypes {
     | '/insights'
     | '/invest'
     | '/plan'
+    | '/privacy'
     | '/records'
     | '/review'
     | '/settings'
     | '/spending'
+    | '/terms'
+    | '/api/account'
     | '/api/advisor'
     | '/api/categorise'
     | '/api/funds'
@@ -241,10 +274,13 @@ export interface FileRouteTypes {
     | '/insights'
     | '/invest'
     | '/plan'
+    | '/privacy'
     | '/records'
     | '/review'
     | '/settings'
     | '/spending'
+    | '/terms'
+    | '/api/account'
     | '/api/advisor'
     | '/api/categorise'
     | '/api/funds'
@@ -263,10 +299,13 @@ export interface RootRouteChildren {
   InsightsRoute: typeof InsightsRoute
   InvestRoute: typeof InvestRoute
   PlanRoute: typeof PlanRoute
+  PrivacyRoute: typeof PrivacyRoute
   RecordsRoute: typeof RecordsRoute
   ReviewRoute: typeof ReviewRoute
   SettingsRoute: typeof SettingsRoute
   SpendingRoute: typeof SpendingRoute
+  TermsRoute: typeof TermsRoute
+  ApiAccountRoute: typeof ApiAccountRoute
   ApiAdvisorRoute: typeof ApiAdvisorRoute
   ApiCategoriseRoute: typeof ApiCategoriseRoute
   ApiFundsRoute: typeof ApiFundsRoute
@@ -328,6 +367,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlanRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/records': {
       id: '/records'
       path: '/records'
@@ -354,6 +400,20 @@ declare module '@tanstack/react-router' {
       path: '/spending'
       fullPath: '/spending'
       preLoaderRoute: typeof SpendingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/account': {
+      id: '/api/account'
+      path: '/api/account'
+      fullPath: '/api/account'
+      preLoaderRoute: typeof ApiAccountRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/advisor': {
@@ -423,10 +483,13 @@ const rootRouteChildren: RootRouteChildren = {
   InsightsRoute: InsightsRoute,
   InvestRoute: InvestRoute,
   PlanRoute: PlanRoute,
+  PrivacyRoute: PrivacyRoute,
   RecordsRoute: RecordsRoute,
   ReviewRoute: ReviewRoute,
   SettingsRoute: SettingsRoute,
   SpendingRoute: SpendingRoute,
+  TermsRoute: TermsRoute,
+  ApiAccountRoute: ApiAccountRoute,
   ApiAdvisorRoute: ApiAdvisorRoute,
   ApiCategoriseRoute: ApiCategoriseRoute,
   ApiFundsRoute: ApiFundsRoute,

@@ -211,6 +211,17 @@ function AuthPage() {
               {mode === "signin" ? "Create an account" : "Sign in"}
             </button>
           </p>
+          <p className="mt-6 text-center text-xs text-muted-foreground">
+            By continuing you agree to our{" "}
+            <a href="/terms" className="underline hover:text-foreground">
+              Terms
+            </a>{" "}
+            and{" "}
+            <a href="/privacy" className="underline hover:text-foreground">
+              Privacy policy
+            </a>
+            .
+          </p>
         </div>
       </main>
     </div>
