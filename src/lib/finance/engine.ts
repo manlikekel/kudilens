@@ -54,10 +54,12 @@ export function simulatePath(
     mu: (Number(x.appreciation) || 0) / 100,
     sigma: (PHYSICAL_VOLATILITY[x.kind] ?? 15) / 100,
   }));
+  // Debts stay in their own currency so a USD loan grows in Naira terms as the Naira weakens.
   const loans = data.debts.map((d) => ({
-    balance: toNGN(Number(d.balance), d.currency, a),
+    cur: d.currency,
+    balance: Number(d.balance) || 0,
     r: (Number(d.interest_rate) || 0) / 100,
-    pay: toNGN(Number(d.minimum_payment), d.currency, a) * 12,
+    pay: (Number(d.minimum_payment) || 0) * 12,
   }));
 
   let cash = (data.accounts ?? []).reduce((t, x) => t + toNGN(x.balance, x.currency, a), 0);
@@ -73,7 +75,7 @@ export function simulatePath(
   const snapshot = (): PathYear => {
     const inv = pots.reduce((t, p) => t + inNGN(p.value, p.cur), 0);
     const ast = physical.reduce((t, p) => t + inNGN(p.value, p.cur), 0);
-    const debt = loans.reduce((t, l) => t + Math.max(0, l.balance), 0) + Math.max(0, -cash);
+    const debt = loans.reduce((t, l) => t + inNGN(Math.max(0, l.balance), l.cur), 0) + Math.max(0, -cash);
     const nw = Math.max(0, cash) + inv + ast - debt;
     const usdRate = a.ngnPerUSD * fxIndex;
     return { cash, investments: inv, assets: ast, debt, netWorth: nw, real: nw / cpi, usd: Number.isFinite(usdRate) ? nw / usdRate : 0 };
@@ -108,7 +110,7 @@ export function simulatePath(
       const owed = l.balance * (1 + l.r);
       const paid = Math.min(l.pay, owed);
       l.balance = owed - paid;
-      debtPaid += paid;
+      debtPaid += inNGN(paid, l.cur);
     }
 
     // surplus can be negative: it draws down cash first, then liquid then other investments

@@ -7,6 +7,7 @@ import {
   Line,
   ResponsiveContainer,
   Tooltip,
+  Legend,
   XAxis,
   YAxis,
   Pie,
@@ -19,6 +20,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useFinance } from "@/lib/useFinance";
 import { buildInsights, formatMoney, project, summarize, convert, getRates } from "@/lib/finance";
 import { Slider } from "@/components/ui/slider";
+import { Meaning, Num } from "@/components/kudi";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -157,10 +159,8 @@ function Dashboard() {
 
       <section className="panel p-5">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
-          <h2 className="text-lg font-semibold">25-year net worth projection</h2>
-          <p className="text-xs text-muted-foreground">
-            Dashed = today's money after {data.profile?.inflation_rate ?? 0}% inflation
-          </p>
+          <h2 className="text-lg font-semibold">25-year net worth projection (likely case)</h2>
+          <p className="text-xs text-muted-foreground">Tap or hover the chart to see any year</p>
         </div>
         <div className="mt-4 h-72">
           <ResponsiveContainer width="100%" height="100%">
@@ -174,14 +174,19 @@ function Dashboard() {
               <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
               <XAxis dataKey="label" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} minTickGap={24} />
               <YAxis
-                tickFormatter={(v: number) => formatMoney(v, cur)}
+                tickFormatter={(v: number) => formatMoney(v, cur, { compact: true })}
                 tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
-                width={70}
+                width={56}
               />
               <Tooltip
-                contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 8 }}
-                formatter={(v: number) => formatMoney(v, cur)}
+                contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }}
+                labelFormatter={(l: string) => {
+                  const [yr, age] = String(l).split(" · ");
+                  return age ? `${yr} — you'll be ${age}` : yr;
+                }}
+                formatter={(v: number) => formatMoney(v, cur, { compact: true })}
               />
+              <Legend wrapperStyle={{ fontSize: 11 }} />
               {extra > 0 && (
                 <Line type="monotone" dataKey="boosted" name="With extra saving" stroke="var(--chart-3)" strokeWidth={2} dot={false} />
               )}
@@ -191,6 +196,18 @@ function Dashboard() {
             </AreaChart>
           </ResponsiveContainer>
         </div>
+        <Meaning>
+          The solid line is what you're likely to own minus what you owe each year, if your income, spending, debts and investments
+          carry on as entered in My numbers. It's shown in future Naira, which buy less as prices rise — so the dashed line shows the
+          same amount in <b>today's money</b> after {data.profile?.inflation_rate ?? 0}% yearly inflation. That dashed line is the one
+          to judge your real progress by. Today you start at{" "}
+          <Num formula="Accounts + investments + property − all debts, converted at today's exchange rates. This is the left-most point on the chart.">{m(s.netWorth)}</Num>.{" "}
+          {base[10] && (
+            <>In 10 years that's <Num formula="Middle (median) path of the same simulation used on the Plan tab: each investment grows at its expected return, income grows with salary growth, spending grows with inflation, debts are paid down at their minimum payments, and leftover money is kept as cash. Foreign-currency items are revalued as the Naira weakens.">{m(base[10].netWorth)}</Num>{" "}
+            (about {m(base[10].realNetWorth)} in today's money).</>
+          )}{" "}
+          Debts with no monthly payment never shrink here. For the range from pessimistic to optimistic, see the Plan tab.
+        </Meaning>
 
         <div className="mt-6 grid gap-4 border-t border-border pt-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
           <div>
