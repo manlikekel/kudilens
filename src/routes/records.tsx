@@ -66,7 +66,7 @@ function Records() {
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="flex w-full flex-wrap">
+        <TabsList className="no-scrollbar flex h-auto w-full justify-start overflow-x-auto rounded-xl p-1 [&>*]:shrink-0">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="accounts">Accounts</TabsTrigger>
           <TabsTrigger value="assets">Property &amp; assets</TabsTrigger>

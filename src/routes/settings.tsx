@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Download, Monitor, Moon, Share, Sun } from "lucide-react";
 import { toast } from "sonner";
 import { isAuthApiError } from "@supabase/supabase-js";
 import { AppShell } from "@/components/AppShell";
@@ -9,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { getTheme, isStandalone, setTheme, useInstall, type ThemeChoice } from "@/lib/pwa";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -72,9 +75,82 @@ function Settings() {
         </div>
       </section>
 
+      <Appearance />
+      <InstallApp />
       <EmailForm current={user.email ?? ""} />
       <PasswordForm email={user.email ?? ""} hasPassword={providers.includes("email")} />
     </div>
+  );
+}
+
+function Appearance() {
+  const [choice, setChoice] = useState<ThemeChoice>("system");
+  useEffect(() => setChoice(getTheme()), []);
+  const options: { value: ThemeChoice; label: string; icon: typeof Sun }[] = [
+    { value: "system", label: "Device", icon: Monitor },
+    { value: "light", label: "Light", icon: Sun },
+    { value: "dark", label: "Dark", icon: Moon },
+  ];
+  return (
+    <section className="panel p-5">
+      <h2 className="text-lg font-semibold">Appearance</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Device follows your phone or computer setting.
+      </p>
+      <div role="radiogroup" aria-label="Theme" className="mt-4 grid grid-cols-3 gap-2">
+        {options.map((o) => (
+          <button
+            key={o.value}
+            role="radio"
+            aria-checked={choice === o.value}
+            onClick={() => {
+              setTheme(o.value);
+              setChoice(o.value);
+            }}
+            className={cn(
+              "flex flex-col items-center gap-2 rounded-xl border border-border px-3 py-3 text-sm font-medium transition-colors hover:bg-accent",
+              choice === o.value && "border-primary bg-primary/10 text-primary",
+            )}
+          >
+            <o.icon className="size-5" />
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function InstallApp() {
+  const { mode, install } = useInstall();
+  const [installed, setInstalled] = useState(false);
+  useEffect(() => setInstalled(isStandalone()), []);
+  return (
+    <section className="panel p-5">
+      <h2 className="text-lg font-semibold">Install the app</h2>
+      {installed ? (
+        <p className="mt-1 text-sm text-muted-foreground">You're using the installed app.</p>
+      ) : mode === "prompt" ? (
+        <>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Add KudiLens to your home screen or desktop. It opens full screen, like any other app.
+          </p>
+          <Button className="mt-4" onClick={install}>
+            <Download /> Install KudiLens
+          </Button>
+        </>
+      ) : mode === "ios" ? (
+        <p className="mt-1 text-sm text-muted-foreground">
+          In Safari, tap <Share className="inline size-4 align-text-bottom" /> Share, then “Add to
+          Home Screen”.
+        </p>
+      ) : (
+        <p className="mt-1 text-sm text-muted-foreground">
+          Open KudiLens in Chrome, Edge or Samsung Internet (Android, Windows, Mac) or Safari
+          (iPhone, iPad) to install it. If you don't see the option, it may already be installed.
+        </p>
+      )}
+    </section>
   );
 }
 
