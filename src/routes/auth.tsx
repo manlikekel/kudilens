@@ -3,9 +3,11 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { ResetWithCode, VerifySignup } from "@/components/AuthCodes";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordHints, PasswordInput, passwordOk } from "@/components/PasswordInput";
 import { Label } from "@/components/ui/label";
 import { LineChart, ShieldCheck, Target } from "lucide-react";
 
@@ -31,7 +33,7 @@ export const Route = createFileRoute("/auth")({
 });
 
 function AuthPage() {
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "verify" | "forgot">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -39,24 +41,45 @@ function AuthPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && user) navigate({ to: "/" });
-  }, [loading, user, navigate]);
+    // during a password reset the code signs the user in before the new password is saved
+    if (!loading && user && mode !== "forgot") navigate({ to: "/" });
+  }, [loading, user, navigate, mode]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        if (!passwordOk(password)) {
+          toast.error("Your password needs at least 8 characters, a letter and a number.");
+          return;
+        }
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: { emailRedirectTo: window.location.origin },
         });
         if (error) throw error;
-        toast.success("Account created. Check your email to confirm, then sign in.");
-        setMode("signin");
+        if (data.session) return; // email confirmation is off: already signed in
+        if (data.user && data.user.identities?.length === 0) {
+          toast.error("That email already has an account. Sign in, or reset your password.");
+          setMode("signin");
+          return;
+        }
+        setMode("verify");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error && /not confirmed/i.test(error.message)) {
+          // send a fresh code and let them finish verifying here
+          await supabase.auth.resend({
+            type: "signup",
+            email,
+            options: { emailRedirectTo: window.location.origin },
+          });
+          toast.message("Please confirm your email first. We've sent you a new code.");
+          setMode("verify");
+          return;
+        }
         if (error) throw error;
       }
     } catch (err) {
@@ -76,20 +99,12 @@ function AuthPage() {
     }
   }
 
-  async function forgot() {
-    if (!email) {
-      toast.error("Enter your email above first.");
-      return;
-    }
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/settings`,
-    });
-    if (error) toast.error(error.message);
-    else
-      toast.success(
-        `If ${email} has an account, a reset link is on its way. It opens Settings to pick a new password.`,
-      );
-  }
+  const heading = {
+    signin: ["Welcome back", "Sign in to see your numbers."],
+    signup: ["Create your account", "It takes a minute. Your data stays private."],
+    verify: ["Check your email", "One last step to protect your account."],
+    forgot: ["Reset your password", "We'll email you a 6-digit code."],
+  }[mode];
 
   return (
     <div className="grid min-h-dvh lg:grid-cols-[1.05fr_1fr]">
@@ -141,76 +156,94 @@ function AuthPage() {
             <p className="mt-1 text-sm text-muted-foreground">Your private money analyst</p>
           </div>
 
-          <h2 className="text-2xl font-semibold">
-            {mode === "signin" ? "Welcome back" : "Create your account"}
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {mode === "signin"
-              ? "Sign in to see your numbers."
-              : "It takes a minute. Your data stays private."}
-          </p>
+          <h2 className="text-2xl font-semibold">{heading[0]}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{heading[1]}</p>
 
-          <Button variant="outline" className="mt-6 w-full" onClick={google}>
-            <GoogleMark /> Continue with Google
-          </Button>
-
-          <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="h-px flex-1 bg-border" />
-            or with email
-            <span className="h-px flex-1 bg-border" />
-          </div>
-
-          <form onSubmit={submit} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                inputMode="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+          {mode === "verify" && (
+            <div className="mt-6">
+              <VerifySignup email={email} onBack={() => setMode("signup")} />
+            </div>
+          )}
+          {mode === "forgot" && (
+            <div className="mt-6">
+              <ResetWithCode
+                initialEmail={email}
+                onDone={() => navigate({ to: "/" })}
+                onCancel={() => setMode("signin")}
               />
             </div>
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                {mode === "signin" && (
-                  <button
-                    type="button"
-                    onClick={forgot}
-                    className="text-xs text-muted-foreground hover:text-primary"
-                  >
-                    Forgot password?
-                  </button>
-                )}
+          )}
+          {(mode === "signin" || mode === "signup") && (
+            <>
+              <Button variant="outline" className="mt-6 w-full" onClick={google}>
+                <GoogleMark /> Continue with Google
+              </Button>
+
+              <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
+                <span className="h-px flex-1 bg-border" />
+                or with email
+                <span className="h-px flex-1 bg-border" />
               </div>
-              <Input
-                id="password"
-                type="password"
-                autoComplete={mode === "signin" ? "current-password" : "new-password"}
-                value={password}
-                minLength={6}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={busy}>
-              {busy ? "Please wait…" : mode === "signin" ? "Sign in" : "Create account"}
-            </Button>
-          </form>
 
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            {mode === "signin" ? "New here? " : "Already have an account? "}
-            <button
-              type="button"
-              className="font-medium text-primary hover:underline"
-              onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-            >
-              {mode === "signin" ? "Create an account" : "Sign in"}
-            </button>
-          </p>
+              <form onSubmit={submit} className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    autoComplete="email"
+                    inputMode="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password">Password</Label>
+                    {mode === "signin" && (
+                      <button
+                        type="button"
+                        onClick={() => setMode("forgot")}
+                        className="text-xs text-muted-foreground hover:text-primary"
+                      >
+                        Forgot password?
+                      </button>
+                    )}
+                  </div>
+                  <PasswordInput
+                    id="password"
+                    autoComplete={mode === "signin" ? "current-password" : "new-password"}
+                    value={password}
+                    minLength={6}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                  {mode === "signup" ? (
+                    <PasswordHints value={password} />
+                  ) : (
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      Passwords are case-sensitive.
+                    </p>
+                  )}
+                </div>
+                <Button type="submit" className="w-full" disabled={busy}>
+                  {busy ? "Please wait…" : mode === "signin" ? "Sign in" : "Create account"}
+                </Button>
+              </form>
+
+              <p className="mt-6 text-center text-sm text-muted-foreground">
+                {mode === "signin" ? "New here? " : "Already have an account? "}
+                <button
+                  type="button"
+                  className="font-medium text-primary hover:underline"
+                  onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
+                >
+                  {mode === "signin" ? "Create an account" : "Sign in"}
+                </button>
+              </p>
+            </>
+          )}
           <p className="mt-6 text-center text-xs text-muted-foreground">
             By continuing you agree to our{" "}
             <a href="/terms" className="underline hover:text-foreground">

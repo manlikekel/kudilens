@@ -19,6 +19,7 @@ import { Route as PlanRouteImport } from './routes/plan'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RecordsRouteImport } from './routes/records'
 import { Route as ReportRouteImport } from './routes/report'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ReviewRouteImport } from './routes/review'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SpendingRouteImport } from './routes/spending'
@@ -84,6 +85,11 @@ const RecordsRoute = RecordsRouteImport.update({
 const ReportRoute = ReportRouteImport.update({
   id: '/report',
   path: '/report',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReviewRoute = ReviewRouteImport.update({
@@ -178,6 +184,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/records': typeof RecordsRoute
   '/report': typeof ReportRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/review': typeof ReviewRoute
   '/settings': typeof SettingsRoute
   '/spending': typeof SpendingRoute
@@ -206,6 +213,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/records': typeof RecordsRoute
   '/report': typeof ReportRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/review': typeof ReviewRoute
   '/settings': typeof SettingsRoute
   '/spending': typeof SpendingRoute
@@ -235,6 +243,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/records': typeof RecordsRoute
   '/report': typeof ReportRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/review': typeof ReviewRoute
   '/settings': typeof SettingsRoute
   '/spending': typeof SpendingRoute
@@ -265,6 +274,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/records'
     | '/report'
+    | '/reset-password'
     | '/review'
     | '/settings'
     | '/spending'
@@ -293,6 +303,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/records'
     | '/report'
+    | '/reset-password'
     | '/review'
     | '/settings'
     | '/spending'
@@ -321,6 +332,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/records'
     | '/report'
+    | '/reset-password'
     | '/review'
     | '/settings'
     | '/spending'
@@ -350,6 +362,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   RecordsRoute: typeof RecordsRoute
   ReportRoute: typeof ReportRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   ReviewRoute: typeof ReviewRoute
   SettingsRoute: typeof SettingsRoute
   SpendingRoute: typeof SpendingRoute
@@ -438,6 +451,13 @@ declare module '@tanstack/react-router' {
       path: '/report'
       fullPath: '/report'
       preLoaderRoute: typeof ReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/review': {
@@ -566,6 +586,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   RecordsRoute: RecordsRoute,
   ReportRoute: ReportRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   ReviewRoute: ReviewRoute,
   SettingsRoute: SettingsRoute,
   SpendingRoute: SpendingRoute,
