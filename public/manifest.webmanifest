@@ -20,6 +20,36 @@
     { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
     { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ],
+  "screenshots": [
+    {
+      "src": "/screenshots/phone-dashboard.jpg",
+      "sizes": "657x1421",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Your net worth, what to do next and what's safe to spend, with amounts hidden in privacy mode"
+    },
+    {
+      "src": "/screenshots/phone-funds.jpg",
+      "sizes": "657x1421",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Compare yields on every SEC-registered Nigerian fund, updated weekly"
+    },
+    {
+      "src": "/screenshots/phone-invest.jpg",
+      "sizes": "657x1421",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Find regulated places to invest in Nigeria, the US, the UK and Canada"
+    },
+    {
+      "src": "/screenshots/phone-guide.jpg",
+      "sizes": "657x1421",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "A plain-English guide to every part of the app"
+    }
+  ],
   "shortcuts": [
     { "name": "Plan", "short_name": "Plan", "url": "/plan", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
     { "name": "Spending", "short_name": "Spending", "url": "/spending", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },

@@ -484,15 +484,19 @@ function NigeriaFunds() {
 
         {data && (
           <div className="mt-4 overflow-x-auto">
-            <table className="w-full min-w-[620px] text-sm">
+            <table className="w-full sm:min-w-[620px] text-sm">
               <thead className="text-left text-xs text-muted-foreground">
                 <tr>
                   <th className="py-2 pr-3 font-normal">Fund</th>
-                  <th className="py-2 pr-3 font-normal">Type</th>
+                  <th className="hidden py-2 pr-3 font-normal sm:table-cell">Type</th>
                   <th className="py-2 pr-3 text-right font-normal">Yield / return</th>
-                  <th className="py-2 pr-3 text-right font-normal">This week</th>
-                  <th className="py-2 pr-3 text-right font-normal">Unit price</th>
-                  <th className="py-2 text-right font-normal">Investors</th>
+                  <th className="hidden py-2 pr-3 text-right font-normal sm:table-cell">
+                    This week
+                  </th>
+                  <th className="hidden py-2 pr-3 text-right font-normal sm:table-cell">
+                    Unit price
+                  </th>
+                  <th className="hidden py-2 text-right font-normal sm:table-cell">Investors</th>
                 </tr>
               </thead>
               <tbody>
@@ -503,8 +507,13 @@ function NigeriaFunds() {
                       <td className="py-2 pr-3">
                         <p className="font-medium">{f.name}</p>
                         <p className="text-xs text-muted-foreground">{f.manager}</p>
+                        <p className="text-[11px] text-muted-foreground/80 sm:hidden">
+                          {f.category}
+                        </p>
                       </td>
-                      <td className="py-2 pr-3 text-xs text-muted-foreground">{f.category}</td>
+                      <td className="hidden py-2 pr-3 text-xs text-muted-foreground sm:table-cell">
+                        {f.category}
+                      </td>
                       <td
                         className={cn(
                           "numeric py-2 pr-3 text-right font-semibold",
@@ -516,15 +525,15 @@ function NigeriaFunds() {
                           {mm ? "per year" : "this year"}
                         </span>
                       </td>
-                      <td className="numeric py-2 pr-3 text-right text-muted-foreground">
+                      <td className="numeric hidden py-2 pr-3 text-right text-muted-foreground sm:table-cell">
                         {mm ? "—" : pct(f.yieldWtd)}
                       </td>
-                      <td className="numeric py-2 pr-3 text-right">
+                      <td className="numeric hidden py-2 pr-3 text-right sm:table-cell">
                         {f.price != null
                           ? formatMoney(f.price, f.priceCurrency, { compact: false })
                           : "—"}
                       </td>
-                      <td className="numeric py-2 text-right text-muted-foreground">
+                      <td className="numeric hidden py-2 text-right text-muted-foreground sm:table-cell">
                         {f.unitholders?.toLocaleString() ?? "—"}
                       </td>
                     </tr>
