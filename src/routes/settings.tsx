@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordHints, PasswordInput, passwordOk } from "@/components/PasswordInput";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { getTheme, isStandalone, setTheme, useInstall, type ThemeChoice } from "@/lib/pwa";
@@ -15,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { CountrySelect } from "@/components/CountrySelect";
 import { AppLockSettings, TwoStepSettings } from "@/components/SecuritySettings";
 import { DataSettings } from "@/components/DataSettings";
+import { ResetWithCode } from "@/components/AuthCodes";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -234,11 +236,12 @@ function PasswordForm({ email, hasPassword }: { email: string; hasPassword: bool
   const [nonce, setNonce] = useState("");
   const [needsCode, setNeedsCode] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (password.length < 8) {
-      toast.error("Use at least 8 characters.");
+    if (!passwordOk(password)) {
+      toast.error("Use at least 8 characters, with a letter and a number.");
       return;
     }
     if (password !== confirm) {
@@ -293,21 +296,20 @@ function PasswordForm({ email, hasPassword }: { email: string; hasPassword: bool
       <form onSubmit={submit} className="mt-4 space-y-3">
         <div className="space-y-1.5">
           <Label htmlFor="new-password">New password</Label>
-          <Input
+          <PasswordInput
             id="new-password"
-            type="password"
             autoComplete="new-password"
             minLength={8}
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+          <PasswordHints value={password} />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="confirm-password">Confirm password</Label>
-          <Input
+          <PasswordInput
             id="confirm-password"
-            type="password"
             autoComplete="new-password"
             minLength={8}
             required
@@ -333,6 +335,26 @@ function PasswordForm({ email, hasPassword }: { email: string; hasPassword: bool
         </Button>
         {!email && <p className="text-xs text-muted-foreground">Add an email above first.</p>}
       </form>
+      {hasPassword && email && (
+        <div className="mt-5 border-t border-border pt-4">
+          {resetting ? (
+            <ResetWithCode
+              initialEmail={email}
+              lockEmail
+              onDone={() => setResetting(false)}
+              onCancel={() => setResetting(false)}
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setResetting(true)}
+              className="text-sm text-primary hover:underline"
+            >
+              Forgot your current password? Reset it with an emailed code
+            </button>
+          )}
+        </div>
+      )}
     </section>
   );
 }
