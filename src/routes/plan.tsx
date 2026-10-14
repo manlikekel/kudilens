@@ -15,6 +15,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { goalPlan } from "@/lib/invest/goalplan";
+import { WhatIfs } from "@/components/plan/WhatIfs";
 import { useCountry } from "@/lib/invest/useCountry";
 import type { CountryCode } from "@/lib/invest/directory";
 import type { Goal } from "@/lib/finance";
@@ -65,6 +66,7 @@ function PlanPage() {
         </p>
       </div>
       <Forecast data={data} />
+      <WhatIfs data={data} uid={user?.id ?? ""} />
       <Goals data={data} />
       <Debts data={data} />
       <CashFlow data={data} />

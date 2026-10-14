@@ -102,7 +102,7 @@ describe("debt-free countdown", () => {
   });
 });
 
-import { simulatePath } from "./engine";
+import { project, simulatePath } from "./engine";
 
 describe("real spending in the projection", () => {
   const data: FinanceData = {
@@ -310,5 +310,55 @@ describe("budgets, sinking funds and safe-to-spend", () => {
     expect(s.spending).toBe(120_000);
     expect(s.bills.map((b) => b.merchant)).toEqual(["DSTV PAYMENT"]);
     expect(s.safe).toBe(1_000_000 - 200_000 - 100_000 - 150_000 - 120_000 - 15_000);
+  });
+});
+
+describe("what-if scenarios", () => {
+  const y0 = new Date().getFullYear();
+  const data: FinanceData = {
+    profile: {
+      id: "u",
+      full_name: null,
+      age: 30,
+      retirement_age: 60,
+      base_currency: "NGN",
+      inflation_rate: 0,
+      risk_tolerance: "balanced",
+      goals: null,
+      salary_growth: 0,
+      cash_yield_ratio: 0,
+    },
+    debts: [],
+    investments: [],
+    family: [],
+    flows: [
+      {
+        id: "i",
+        label: "Salary",
+        flow_type: "income",
+        category: "Salary",
+        monthly_amount: 1_000_000,
+        currency: "NGN",
+        growth_rate: 0,
+      },
+    ],
+  };
+  const base = project(data, 3, 0);
+  it("a one-off purchase lowers net worth from that year on", () => {
+    const car = project(data, 3, 0, {
+      changes: [{ kind: "oneOff", label: "Car", amount: -5_000_000, year: y0 + 2 }],
+    });
+    expect(car[1]!.netWorth).toBe(base[1]!.netWorth);
+    expect(car[2]!.netWorth).toBe(base[2]!.netWorth - 5_000_000);
+    expect(car[3]!.netWorth).toBe(base[3]!.netWorth - 5_000_000);
+  });
+  it("a monthly change applies 12× a year between its start and end", () => {
+    const raise = project(data, 3, 0, {
+      changes: [
+        { kind: "monthly", label: "Raise", amount: 100_000, year: y0 + 1, endYear: y0 + 2 },
+      ],
+    });
+    expect(raise[1]!.netWorth - base[1]!.netWorth).toBe(1_200_000);
+    expect(raise[3]!.netWorth - base[3]!.netWorth).toBe(2_400_000);
   });
 });
