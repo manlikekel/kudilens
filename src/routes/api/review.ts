@@ -18,7 +18,7 @@ export const Route = createFileRoute("/api/review")({
         try {
           const now = new Date();
           const period = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-          const data = await loadData(supabase, userId);
+          const data = await loadData(supabase, userId, auth.live);
           const { data: prev } = await supabase
             .from("monthly_reviews")
             .select("period, net_worth, report")

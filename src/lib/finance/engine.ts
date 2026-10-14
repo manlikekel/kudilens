@@ -49,6 +49,27 @@ export interface EngineOptions {
    * liquid pots, then the rest.
    */
   protectInvestments?: boolean;
+  /**
+   * true: living and family costs use the user's actual average monthly spending from imported
+   * statements (when there is any) instead of the amounts typed in My numbers.
+   */
+  actualSpending?: boolean;
+  /** what-if scenario: extra money in (+) or out (−) during projected year y, in Naira */
+  scenario?: (y: number) => number;
+}
+
+/**
+ * One line of a what-if scenario, in the user's base currency. Positive amounts add money
+ * (a raise, a windfall, a cost you cut); negative ones take it away (a purchase, a new bill).
+ */
+export interface ScenarioChange {
+  kind: "oneOff" | "monthly";
+  label: string;
+  amount: number;
+  /** calendar year it happens (one-off) or starts (monthly) */
+  year: number;
+  /** last calendar year a monthly change applies; open-ended when missing */
+  endYear?: number | undefined;
 }
 
 export type InterestMode = "compound" | "simple";
@@ -72,7 +93,11 @@ export function simulatePath(
   const fxNow = (cur: string) => toNGN(1, cur, a); // NGN per unit today
 
   const income0 = base(s.monthlyIncome) * 12;
-  const expenses0 = base(s.monthlyExpenses + s.familyCost) * 12;
+  const useActual = !!opts.actualSpending && (data.actualSpend?.months ?? 0) > 0;
+  // actualSpend is already in Naira and excludes transfers, savings and debt repayments
+  const expenses0 = useActual
+    ? data.actualSpend!.avgMonthly * 12
+    : base(s.monthlyExpenses + s.familyCost) * 12;
   const extra = (opts.extraMonthly ?? 0) * 12;
 
   const pots = data.investments.map((i) => ({
@@ -177,7 +202,8 @@ export function simulatePath(
 
     // surplus can be negative: it draws down cash first, then (unless investments are protected)
     // liquid then other investments
-    const surplus = income - expenses - debtPaid - contributions + extra;
+    const surplus =
+      income - expenses - debtPaid - contributions + extra + (opts.scenario ? opts.scenario(y) : 0);
     const cashInterest = cash > 0 ? cash * infl * a.cashYieldRatio : 0;
     cash += cashInterest + surplus;
     if (cash < 0 && !opts.protectInvestments) {
@@ -239,13 +265,30 @@ export function project(
   data: FinanceData,
   years = 25,
   extraMonthly = 0,
-  opts: Pick<EngineOptions, "interest" | "protectInvestments"> = {},
+  opts: Pick<EngineOptions, "interest" | "protectInvestments" | "actualSpending"> & {
+    changes?: ScenarioChange[];
+  } = {},
 ): ProjectionPoint[] {
   const a = getAssumptions(data);
   const base = data.profile?.base_currency ?? "NGN";
   const extraNGN = toNGN(extraMonthly, base, a);
-  const path = simulatePath(data, years, null, { ...opts, extraMonthly: extraNGN });
   const y0 = new Date().getFullYear();
+  const { changes, ...engineOpts } = opts;
+  // projected year y covers calendar year y0 + y; anything dated this year lands in year 1
+  const scenario = changes?.length
+    ? (y: number) =>
+        changes.reduce((t, c) => {
+          const at = (year: number) => Math.max(1, year - y0);
+          if (c.kind === "oneOff") return at(c.year) === y ? t + toNGN(c.amount, base, a) : t;
+          const active = y >= at(c.year) && (c.endYear == null || y <= at(c.endYear));
+          return active ? t + toNGN(c.amount, base, a) * 12 : t;
+        }, 0)
+    : undefined;
+  const path = simulatePath(data, years, null, {
+    ...engineOpts,
+    extraMonthly: extraNGN,
+    ...(scenario ? { scenario } : {}),
+  });
   const age = data.profile?.age ?? null;
   const toBase = (ngn: number) => (base === "NGN" ? ngn : ngn / Math.max(1e-9, toNGN(1, base, a)));
   const out: ProjectionPoint[] = [];

@@ -21,7 +21,7 @@ export const Route = createFileRoute("/api/insights")({
         if (!auth) return new Response("Unauthorized", { status: 401 });
         const { supabase, userId } = auth;
         try {
-          const data = await loadData(supabase, userId);
+          const data = await loadData(supabase, userId, auth.live);
           const { data: past } = await supabase
             .from("ai_insights")
             .select("kind, title, status")

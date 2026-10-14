@@ -44,6 +44,8 @@ export interface Assumptions {
 
 export function getAssumptions(data: FinanceData): Assumptions {
   const p = data.profile;
+  // live market values (when the user keeps "Fill from live data" on) win over typed ones
+  const m = data.market;
   const rates = getRates(data);
   const ngn = rates.perUSD["NGN"];
   const num = (v: unknown, d: number) => (v == null || !Number.isFinite(Number(v)) ? d : Number(v));
@@ -51,14 +53,17 @@ export function getAssumptions(data: FinanceData): Assumptions {
     base: p?.base_currency ?? "NGN",
     rates,
     ngnPerUSD: ngn && ngn > 0 ? ngn : NaN,
-    inflation: num(p?.inflation_rate, 25) / 100,
+    inflation: num(m?.inflation?.value ?? p?.inflation_rate, 25) / 100,
     inflationVolatility: 0.05,
-    fxDepreciation: num(p?.fx_depreciation, 15) / 100,
+    fxDepreciation: num(m?.fxDepreciation?.value ?? p?.fx_depreciation, 15) / 100,
     fxVolatility: 0.15,
-    infFxCorrelation: Math.max(-1, Math.min(1, num(p?.inflation_fx_correlation, 0.6))),
-    cashYieldRatio: num(p?.cash_yield_ratio, 0.5),
-    foreignInflation: num(p?.foreign_inflation, 3) / 100,
-    educationInflation: num(p?.education_inflation, 20) / 100,
+    infFxCorrelation: Math.max(
+      -1,
+      Math.min(1, num(m?.inflationFxCorrelation?.value ?? p?.inflation_fx_correlation, 0.6)),
+    ),
+    cashYieldRatio: num(m?.cashYieldRatio?.value ?? p?.cash_yield_ratio, 0.5),
+    foreignInflation: num(m?.foreignInflation?.value ?? p?.foreign_inflation, 3) / 100,
+    educationInflation: num(m?.educationInflation?.value ?? p?.education_inflation, 20) / 100,
     salaryGrowth: num(p?.salary_growth, 10) / 100,
     growContributions: p?.grow_contributions ?? true,
     incomeStability: p?.income_stability ?? "stable",

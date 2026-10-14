@@ -4,6 +4,9 @@ import {
   Bell,
   Compass,
   Download,
+  Eye,
+  EyeOff,
+  FileDown,
   FileText,
   Home,
   Lightbulb,
@@ -26,6 +29,9 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { cn } from "@/lib/utils";
 import { useFinance } from "@/lib/useFinance";
 import { useInstall } from "@/lib/pwa";
+import { usePrivacy } from "@/lib/privacy";
+import { useAppLock } from "@/lib/applock";
+import { LockScreen, SecondStepScreen, useNeedsSecondStep } from "@/components/Security";
 import { getRates, missingCurrencies, rateLabel, usedCurrencies } from "@/lib/finance";
 
 /** Shows which exchange rates every converted figure uses, and warns when one is missing. */
@@ -77,6 +83,7 @@ const groups: { label: string; items: NavItem[] }[] = [
       { to: "/advisor", label: "Ask Kudi", icon: MessageCircle },
       { to: "/ideas", label: "My Ideas", icon: Lightbulb },
       { to: "/review", label: "Review", icon: FileText },
+      { to: "/report", label: "Monthly report", icon: FileDown },
     ],
   },
   {
@@ -115,6 +122,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [moreOpen, setMoreOpen] = useState(false);
   const { mode: installMode, install } = useInstall();
   const [iosHelp, setIosHelp] = useState(false);
+  const [hidden, setHidden] = usePrivacy();
+  const { locked, config: lockConfig } = useAppLock();
+  const [needsCode, codeDone] = useNeedsSecondStep(user?.id);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
@@ -141,6 +151,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   };
   const current = allItems.find((i) => i.to === pathname);
 
+  if (needsCode) return <SecondStepScreen onDone={codeDone} onSignOut={signOut} />;
+  if (locked && lockConfig) return <LockScreen config={lockConfig} onSignOut={signOut} />;
+
   return (
     <div className="min-h-dvh lg:pl-[264px]">
       {/* ---------- desktop sidebar ---------- */}
@@ -162,6 +175,14 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           ))}
         </nav>
+        <button
+          onClick={() => setHidden(!hidden)}
+          aria-pressed={hidden}
+          className="mb-2 flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        >
+          {hidden ? <EyeOff className="size-[18px]" /> : <Eye className="size-[18px]" />}
+          {hidden ? "Show amounts" : "Hide amounts"}
+        </button>
         {installMode && (
           <button
             onClick={onInstall}
@@ -200,6 +221,15 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="flex h-14 items-center justify-between gap-3 px-safe">
           <Logo />
           <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setHidden(!hidden)}
+              aria-pressed={hidden}
+              aria-label={hidden ? "Show amounts" : "Hide amounts"}
+            >
+              {hidden ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
+            </Button>
             {installMode && (
               <Button variant="ghost" size="icon" onClick={onInstall} aria-label="Install app">
                 <Download className="size-5" />
@@ -219,11 +249,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main className="mx-auto max-w-6xl px-safe pt-4 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:px-6 lg:px-10 lg:pt-8 lg:pb-12">
         <RateBar userId={user.id} />
         {current && (
-          <p className="mt-1 text-xs font-medium uppercase tracking-[0.14em] text-primary lg:hidden">
+          <p className="mt-1 text-xs font-medium uppercase tracking-[0.14em] text-primary lg:hidden print:hidden">
             {current.label}
           </p>
         )}
-        <div key={pathname} className="mt-3 animate-rise lg:mt-4">
+        <div key={`${pathname}:${hidden}`} className="mt-3 animate-rise lg:mt-4">
           {children}
         </div>
       </main>

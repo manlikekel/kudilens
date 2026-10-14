@@ -16,15 +16,22 @@ import { Route as IdeasRouteImport } from './routes/ideas'
 import { Route as InsightsRouteImport } from './routes/insights'
 import { Route as InvestRouteImport } from './routes/invest'
 import { Route as PlanRouteImport } from './routes/plan'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RecordsRouteImport } from './routes/records'
+import { Route as ReportRouteImport } from './routes/report'
 import { Route as ReviewRouteImport } from './routes/review'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SpendingRouteImport } from './routes/spending'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as WelcomeRouteImport } from './routes/welcome'
+import { Route as ApiAccountRouteImport } from './routes/api/account'
 import { Route as ApiAdvisorRouteImport } from './routes/api/advisor'
 import { Route as ApiCategoriseRouteImport } from './routes/api/categorise'
 import { Route as ApiFundsRouteImport } from './routes/api/funds'
 import { Route as ApiIdeasRouteImport } from './routes/api/ideas'
 import { Route as ApiInsightsRouteImport } from './routes/api/insights'
+import { Route as ApiMarketRouteImport } from './routes/api/market'
+import { Route as ApiNgFundsRouteImport } from './routes/api/ng-funds'
 import { Route as ApiReviewRouteImport } from './routes/api/review'
 import { Route as ApiStatementsRouteImport } from './routes/api/statements'
 import { Route as ApiPublicHooksRefreshFxRouteImport } from './routes/api/public/hooks/refresh-fx'
@@ -64,9 +71,19 @@ const PlanRoute = PlanRouteImport.update({
   path: '/plan',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecordsRoute = RecordsRouteImport.update({
   id: '/records',
   path: '/records',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportRoute = ReportRouteImport.update({
+  id: '/report',
+  path: '/report',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReviewRoute = ReviewRouteImport.update({
@@ -82,6 +99,21 @@ const SettingsRoute = SettingsRouteImport.update({
 const SpendingRoute = SpendingRouteImport.update({
   id: '/spending',
   path: '/spending',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WelcomeRoute = WelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAccountRoute = ApiAccountRouteImport.update({
+  id: '/api/account',
+  path: '/api/account',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAdvisorRoute = ApiAdvisorRouteImport.update({
@@ -109,6 +141,16 @@ const ApiInsightsRoute = ApiInsightsRouteImport.update({
   path: '/api/insights',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMarketRoute = ApiMarketRouteImport.update({
+  id: '/api/market',
+  path: '/api/market',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiNgFundsRoute = ApiNgFundsRouteImport.update({
+  id: '/api/ng-funds',
+  path: '/api/ng-funds',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiReviewRoute = ApiReviewRouteImport.update({
   id: '/api/review',
   path: '/api/review',
@@ -133,15 +175,22 @@ export interface FileRoutesByFullPath {
   '/insights': typeof InsightsRoute
   '/invest': typeof InvestRoute
   '/plan': typeof PlanRoute
+  '/privacy': typeof PrivacyRoute
   '/records': typeof RecordsRoute
+  '/report': typeof ReportRoute
   '/review': typeof ReviewRoute
   '/settings': typeof SettingsRoute
   '/spending': typeof SpendingRoute
+  '/terms': typeof TermsRoute
+  '/welcome': typeof WelcomeRoute
+  '/api/account': typeof ApiAccountRoute
   '/api/advisor': typeof ApiAdvisorRoute
   '/api/categorise': typeof ApiCategoriseRoute
   '/api/funds': typeof ApiFundsRoute
   '/api/ideas': typeof ApiIdeasRoute
   '/api/insights': typeof ApiInsightsRoute
+  '/api/market': typeof ApiMarketRoute
+  '/api/ng-funds': typeof ApiNgFundsRoute
   '/api/review': typeof ApiReviewRoute
   '/api/statements': typeof ApiStatementsRoute
   '/api/public/hooks/refresh-fx': typeof ApiPublicHooksRefreshFxRoute
@@ -154,15 +203,22 @@ export interface FileRoutesByTo {
   '/insights': typeof InsightsRoute
   '/invest': typeof InvestRoute
   '/plan': typeof PlanRoute
+  '/privacy': typeof PrivacyRoute
   '/records': typeof RecordsRoute
+  '/report': typeof ReportRoute
   '/review': typeof ReviewRoute
   '/settings': typeof SettingsRoute
   '/spending': typeof SpendingRoute
+  '/terms': typeof TermsRoute
+  '/welcome': typeof WelcomeRoute
+  '/api/account': typeof ApiAccountRoute
   '/api/advisor': typeof ApiAdvisorRoute
   '/api/categorise': typeof ApiCategoriseRoute
   '/api/funds': typeof ApiFundsRoute
   '/api/ideas': typeof ApiIdeasRoute
   '/api/insights': typeof ApiInsightsRoute
+  '/api/market': typeof ApiMarketRoute
+  '/api/ng-funds': typeof ApiNgFundsRoute
   '/api/review': typeof ApiReviewRoute
   '/api/statements': typeof ApiStatementsRoute
   '/api/public/hooks/refresh-fx': typeof ApiPublicHooksRefreshFxRoute
@@ -176,15 +232,22 @@ export interface FileRoutesById {
   '/insights': typeof InsightsRoute
   '/invest': typeof InvestRoute
   '/plan': typeof PlanRoute
+  '/privacy': typeof PrivacyRoute
   '/records': typeof RecordsRoute
+  '/report': typeof ReportRoute
   '/review': typeof ReviewRoute
   '/settings': typeof SettingsRoute
   '/spending': typeof SpendingRoute
+  '/terms': typeof TermsRoute
+  '/welcome': typeof WelcomeRoute
+  '/api/account': typeof ApiAccountRoute
   '/api/advisor': typeof ApiAdvisorRoute
   '/api/categorise': typeof ApiCategoriseRoute
   '/api/funds': typeof ApiFundsRoute
   '/api/ideas': typeof ApiIdeasRoute
   '/api/insights': typeof ApiInsightsRoute
+  '/api/market': typeof ApiMarketRoute
+  '/api/ng-funds': typeof ApiNgFundsRoute
   '/api/review': typeof ApiReviewRoute
   '/api/statements': typeof ApiStatementsRoute
   '/api/public/hooks/refresh-fx': typeof ApiPublicHooksRefreshFxRoute
@@ -199,15 +262,22 @@ export interface FileRouteTypes {
     | '/insights'
     | '/invest'
     | '/plan'
+    | '/privacy'
     | '/records'
+    | '/report'
     | '/review'
     | '/settings'
     | '/spending'
+    | '/terms'
+    | '/welcome'
+    | '/api/account'
     | '/api/advisor'
     | '/api/categorise'
     | '/api/funds'
     | '/api/ideas'
     | '/api/insights'
+    | '/api/market'
+    | '/api/ng-funds'
     | '/api/review'
     | '/api/statements'
     | '/api/public/hooks/refresh-fx'
@@ -220,15 +290,22 @@ export interface FileRouteTypes {
     | '/insights'
     | '/invest'
     | '/plan'
+    | '/privacy'
     | '/records'
+    | '/report'
     | '/review'
     | '/settings'
     | '/spending'
+    | '/terms'
+    | '/welcome'
+    | '/api/account'
     | '/api/advisor'
     | '/api/categorise'
     | '/api/funds'
     | '/api/ideas'
     | '/api/insights'
+    | '/api/market'
+    | '/api/ng-funds'
     | '/api/review'
     | '/api/statements'
     | '/api/public/hooks/refresh-fx'
@@ -241,15 +318,22 @@ export interface FileRouteTypes {
     | '/insights'
     | '/invest'
     | '/plan'
+    | '/privacy'
     | '/records'
+    | '/report'
     | '/review'
     | '/settings'
     | '/spending'
+    | '/terms'
+    | '/welcome'
+    | '/api/account'
     | '/api/advisor'
     | '/api/categorise'
     | '/api/funds'
     | '/api/ideas'
     | '/api/insights'
+    | '/api/market'
+    | '/api/ng-funds'
     | '/api/review'
     | '/api/statements'
     | '/api/public/hooks/refresh-fx'
@@ -263,15 +347,22 @@ export interface RootRouteChildren {
   InsightsRoute: typeof InsightsRoute
   InvestRoute: typeof InvestRoute
   PlanRoute: typeof PlanRoute
+  PrivacyRoute: typeof PrivacyRoute
   RecordsRoute: typeof RecordsRoute
+  ReportRoute: typeof ReportRoute
   ReviewRoute: typeof ReviewRoute
   SettingsRoute: typeof SettingsRoute
   SpendingRoute: typeof SpendingRoute
+  TermsRoute: typeof TermsRoute
+  WelcomeRoute: typeof WelcomeRoute
+  ApiAccountRoute: typeof ApiAccountRoute
   ApiAdvisorRoute: typeof ApiAdvisorRoute
   ApiCategoriseRoute: typeof ApiCategoriseRoute
   ApiFundsRoute: typeof ApiFundsRoute
   ApiIdeasRoute: typeof ApiIdeasRoute
   ApiInsightsRoute: typeof ApiInsightsRoute
+  ApiMarketRoute: typeof ApiMarketRoute
+  ApiNgFundsRoute: typeof ApiNgFundsRoute
   ApiReviewRoute: typeof ApiReviewRoute
   ApiStatementsRoute: typeof ApiStatementsRoute
   ApiPublicHooksRefreshFxRoute: typeof ApiPublicHooksRefreshFxRoute
@@ -328,11 +419,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlanRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/records': {
       id: '/records'
       path: '/records'
       fullPath: '/records'
       preLoaderRoute: typeof RecordsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/report': {
+      id: '/report'
+      path: '/report'
+      fullPath: '/report'
+      preLoaderRoute: typeof ReportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/review': {
@@ -354,6 +459,27 @@ declare module '@tanstack/react-router' {
       path: '/spending'
       fullPath: '/spending'
       preLoaderRoute: typeof SpendingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/welcome': {
+      id: '/welcome'
+      path: '/welcome'
+      fullPath: '/welcome'
+      preLoaderRoute: typeof WelcomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/account': {
+      id: '/api/account'
+      path: '/api/account'
+      fullPath: '/api/account'
+      preLoaderRoute: typeof ApiAccountRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/advisor': {
@@ -391,6 +517,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiInsightsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/market': {
+      id: '/api/market'
+      path: '/api/market'
+      fullPath: '/api/market'
+      preLoaderRoute: typeof ApiMarketRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ng-funds': {
+      id: '/api/ng-funds'
+      path: '/api/ng-funds'
+      fullPath: '/api/ng-funds'
+      preLoaderRoute: typeof ApiNgFundsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/review': {
       id: '/api/review'
       path: '/api/review'
@@ -423,15 +563,22 @@ const rootRouteChildren: RootRouteChildren = {
   InsightsRoute: InsightsRoute,
   InvestRoute: InvestRoute,
   PlanRoute: PlanRoute,
+  PrivacyRoute: PrivacyRoute,
   RecordsRoute: RecordsRoute,
+  ReportRoute: ReportRoute,
   ReviewRoute: ReviewRoute,
   SettingsRoute: SettingsRoute,
   SpendingRoute: SpendingRoute,
+  TermsRoute: TermsRoute,
+  WelcomeRoute: WelcomeRoute,
+  ApiAccountRoute: ApiAccountRoute,
   ApiAdvisorRoute: ApiAdvisorRoute,
   ApiCategoriseRoute: ApiCategoriseRoute,
   ApiFundsRoute: ApiFundsRoute,
   ApiIdeasRoute: ApiIdeasRoute,
   ApiInsightsRoute: ApiInsightsRoute,
+  ApiMarketRoute: ApiMarketRoute,
+  ApiNgFundsRoute: ApiNgFundsRoute,
   ApiReviewRoute: ApiReviewRoute,
   ApiStatementsRoute: ApiStatementsRoute,
   ApiPublicHooksRefreshFxRoute: ApiPublicHooksRefreshFxRoute,

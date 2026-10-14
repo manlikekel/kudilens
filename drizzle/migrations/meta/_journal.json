@@ -36,6 +36,13 @@
       "when": 1791788361662,
       "tag": "0004_transactions_and_rules",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791950402754,
+      "tag": "0005_growth_tools",
+      "breakpoints": true
     }
   ]
 }

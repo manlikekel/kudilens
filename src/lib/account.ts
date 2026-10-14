@@ -1,0 +1,21 @@
+/** Every table that holds a user's own rows, keyed by the column that names the owner. */
+export const USER_TABLES = [
+  { table: "net_worth_snapshots", owner: "user_id" },
+  { table: "budgets", owner: "user_id" },
+  { table: "scenarios", owner: "user_id" },
+  { table: "transactions", owner: "user_id" },
+  { table: "category_rules", owner: "user_id" },
+  { table: "advisor_messages", owner: "user_id" },
+  { table: "ai_insights", owner: "user_id" },
+  { table: "monthly_reviews", owner: "user_id" },
+  { table: "investment_ideas", owner: "user_id" },
+  { table: "goals", owner: "user_id" },
+  { table: "lump_costs", owner: "user_id" },
+  { table: "family_members", owner: "user_id" },
+  { table: "cash_flows", owner: "user_id" },
+  { table: "debts", owner: "user_id" },
+  { table: "investments", owner: "user_id" },
+  { table: "assets", owner: "user_id" },
+  { table: "accounts", owner: "user_id" },
+  { table: "profiles", owner: "id" },
+] as const;

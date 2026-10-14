@@ -14,3 +14,7 @@ export * from "./emergency";
 export * from "./summary";
 export * from "./transactions";
 export * from "./wealth";
+export * from "./market";
+export * from "./debtfree";
+export * from "./history";
+export * from "./budget";

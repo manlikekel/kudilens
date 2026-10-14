@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState, type ReactNode } from "react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { AppShell } from "@/components/AppShell";
@@ -14,6 +14,11 @@ import { Slider } from "@/components/ui/slider";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { goalPlan } from "@/lib/invest/goalplan";
+import { WhatIfs } from "@/components/plan/WhatIfs";
+import { useCountry } from "@/lib/invest/useCountry";
+import type { CountryCode } from "@/lib/invest/directory";
+import type { Goal } from "@/lib/finance";
 
 export const Route = createFileRoute("/plan")({
   head: () => ({
@@ -61,6 +66,7 @@ function PlanPage() {
         </p>
       </div>
       <Forecast data={data} />
+      <WhatIfs data={data} uid={user?.id ?? ""} />
       <Goals data={data} />
       <Debts data={data} />
       <CashFlow data={data} />
@@ -131,10 +137,34 @@ function Forecast({ data }: { data: FinanceData }) {
   );
 }
 
+/** Where to keep a goal's money, with licensed platforms in the user's country. */
+function GoalHome({ goal, months, country }: { goal: Goal; months: number; country: CountryCode }) {
+  const plan = goalPlan(goal, months, country);
+  return (
+    <div className="mt-3 rounded-lg bg-secondary/50 p-3 text-xs">
+      <p>
+        <span className="text-muted-foreground">Where to keep it: </span>
+        <b>{plan.vehicle}</b>
+      </p>
+      <p className="mt-1 text-muted-foreground">{plan.why}</p>
+      {plan.platforms.length > 0 && (
+        <p className="mt-1 text-muted-foreground">
+          Offered by e.g.{" "}
+          <Link to="/invest" className="text-primary underline">
+            {plan.platforms.join(", ")}
+          </Link>
+        </p>
+      )}
+      {plan.warning && <p className="mt-1.5 text-warning">{plan.warning}</p>}
+    </div>
+  );
+}
+
 /* 2. Goal probability */
 function Goals({ data }: { data: FinanceData }) {
   const analyses = useMemo(() => analyzeGoals(data), [data]);
   const comp = useMemo(() => goalCompetition(data, analyses), [data, analyses]);
+  const { code: country } = useCountry();
   if (!analyses.length)
     return (
       <Card title="Goal probability">
@@ -165,6 +195,7 @@ function Goals({ data }: { data: FinanceData }) {
                   {compact(g.required.p50)} / {compact(g.required.p75)} / {compact(g.required.p90)}
                 </span>
               </p>
+              <GoalHome goal={g.goal} months={g.months} country={country} />
             </div>
           );
         })}

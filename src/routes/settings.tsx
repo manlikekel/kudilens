@@ -13,6 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { getTheme, isStandalone, setTheme, useInstall, type ThemeChoice } from "@/lib/pwa";
 import { cn } from "@/lib/utils";
 import { CountrySelect } from "@/components/CountrySelect";
+import { AppLockSettings, TwoStepSettings } from "@/components/SecuritySettings";
+import { DataSettings } from "@/components/DataSettings";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -83,10 +85,22 @@ function Settings() {
         </p>
         <CountrySelect className="mt-4 sm:w-72" />
       </section>
+      <AppLockSettings email={user.email ?? ""} />
+      <TwoStepSettings />
       <Appearance />
       <InstallApp />
       <EmailForm current={user.email ?? ""} />
       <PasswordForm email={user.email ?? ""} hasPassword={providers.includes("email")} />
+      <DataSettings email={user.email ?? ""} />
+      <p className="pb-2 text-center text-xs text-muted-foreground">
+        <a href="/privacy" className="hover:text-foreground">
+          Privacy policy
+        </a>{" "}
+        ·{" "}
+        <a href="/terms" className="hover:text-foreground">
+          Terms of use
+        </a>
+      </p>
     </div>
   );
 }

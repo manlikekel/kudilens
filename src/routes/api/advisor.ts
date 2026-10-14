@@ -38,25 +38,34 @@ export const Route = createFileRoute("/api/advisor")({
         let loaded;
         try {
           loaded = await Promise.all([
-          loadData(supabase, userId),
-          supabase
-            .from("advisor_messages")
-            .select("role, content")
-            .eq("user_id", userId)
-            .order("created_at", { ascending: true })
-            .limit(40),
+            loadData(
+              supabase,
+              userId,
+              (userData.user.user_metadata as { live_assumptions?: boolean } | undefined)
+                ?.live_assumptions !== false,
+            ),
+            supabase
+              .from("advisor_messages")
+              .select("role, content")
+              .eq("user_id", userId)
+              .order("created_at", { ascending: true })
+              .limit(40),
           ]);
         } catch (e) {
           return errorResponse(e);
         }
         const [data, history] = loaded;
-        if (history.error) return new Response(`Could not load chat history: ${history.error.message}`, { status: 500 });
+        if (history.error)
+          return new Response(`Could not load chat history: ${history.error.message}`, {
+            status: 500,
+          });
         const snapshot = aiSummary(data);
 
         const { error: insErr } = await supabase
           .from("advisor_messages")
           .insert({ user_id: userId, role: "user", content: message });
-        if (insErr) return new Response(`Could not save message: ${insErr.message}`, { status: 500 });
+        if (insErr)
+          return new Response(`Could not save message: ${insErr.message}`, { status: 500 });
 
         const apiKey = process.env["LOVABLE_API_KEY"];
         if (!apiKey) return new Response("AI is not configured", { status: 500 });

@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Budgets, SinkingFunds } from "@/components/spending/Budgets";
 
 export const Route = createFileRoute("/spending")({
   head: () => ({
@@ -83,14 +84,18 @@ function SpendingPage() {
         <p className="text-sm text-muted-foreground">Import statements from GTBank, Access, Zenith, UBA, First Bank, Kuda, Moniepoint, Opay or any bank's CSV/PDF.</p>
       </div>
       <Tabs defaultValue={txns.length ? "overview" : "import"}>
-        <TabsList>
+        <TabsList className="no-scrollbar flex h-auto w-full justify-start overflow-x-auto rounded-xl p-1 [&>*]:shrink-0">
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="budgets">Budgets</TabsTrigger>
+          <TabsTrigger value="sinking">Sinking funds</TabsTrigger>
           <TabsTrigger value="import">Import</TabsTrigger>
           <TabsTrigger value="transactions">Transactions ({txns.length})</TabsTrigger>
           <TabsTrigger value="recurring">Recurring ({recurring.length})</TabsTrigger>
           <TabsTrigger value="rules">Rules ({rules.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="overview"><Overview months={months} usesActual={!!fin?.actualSpend?.months} /></TabsContent>
+        <TabsContent value="budgets">{fin && <Budgets data={fin} txns={txns} uid={uid} />}</TabsContent>
+        <TabsContent value="sinking">{fin && <SinkingFunds data={fin} uid={uid} />}</TabsContent>
         <TabsContent value="import">
           <Importer uid={uid} accounts={fin?.accounts ?? []} rules={rules} onDone={refresh} />
         </TabsContent>

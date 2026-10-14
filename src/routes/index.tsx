@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   Area,
@@ -26,6 +26,7 @@ import {
   summarize,
   convert,
   getRates,
+  getAssumptions,
   type InterestMode,
   type PotGrowth,
   type ProjectionPoint,
@@ -33,6 +34,15 @@ import {
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Meaning, Num } from "@/components/kudi";
+import { DebtCountdown } from "@/components/dashboard/DebtCountdown";
+import {
+  MonthlyCheckIn,
+  NeedsDatabaseUpdate,
+  NetWorthHistory,
+} from "@/components/dashboard/Growth";
+import { useRecentTxns, useRecordSnapshot, useSnapshots } from "@/lib/useGrowth";
+import { SafeToSpend } from "@/components/dashboard/SafeToSpend";
+import { onboarded } from "@/lib/onboarding";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -76,6 +86,9 @@ const CHART_COLORS = [
 function Dashboard() {
   const { user } = useAuth();
   const { data, isLoading, error } = useFinance(user?.id);
+  const snapshots = useSnapshots(user?.id);
+  useRecordSnapshot(user?.id, data);
+  const recentTxns = useRecentTxns(user?.id);
   const [extra, setExtra] = useState(0);
   const [opts, setOpts] = useProjectionOptions();
 
@@ -90,6 +103,15 @@ function Dashboard() {
       pots: investmentGrowth(data, 25, opts.interest),
     };
   }, [data, extra, opts]);
+
+  // brand-new account with nothing entered: start the guided setup once
+  const navigate = useNavigate();
+  const isEmpty =
+    !!data &&
+    data.debts.length + data.investments.length + data.flows.length + data.family.length === 0;
+  useEffect(() => {
+    if (isEmpty && !onboarded()) navigate({ to: "/welcome" });
+  }, [isEmpty, navigate]);
 
   if (isLoading) return <p className="text-muted-foreground">Crunching your numbers…</p>;
   if (error) return <p className="text-destructive">Could not load data: {error.message}</p>;
@@ -195,6 +217,8 @@ function Dashboard() {
         </div>
       </section>
 
+      {!empty && <MonthlyCheckIn data={data} history={snapshots.data ?? []} />}
+
       {empty && (
         <div className="panel flex flex-col gap-3 p-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -205,7 +229,7 @@ function Dashboard() {
             </p>
           </div>
           <Button asChild>
-            <Link to="/records">Add my numbers</Link>
+            <Link to="/welcome">Start the 2-minute setup</Link>
           </Button>
         </div>
       )}
@@ -230,12 +254,22 @@ function Dashboard() {
         />
       </div>
 
+      {!empty && <SafeToSpend data={data} txns={recentTxns.data ?? []} />}
+
+      <DebtCountdown data={data} />
+
+      {snapshots.missing ? (
+        <NeedsDatabaseUpdate feature="Net worth history and the monthly check-in" />
+      ) : (
+        snapshots.data && <NetWorthHistory history={snapshots.data} cur={cur} />
+      )}
+
       <section className="panel p-5">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
           <h2 className="text-lg font-semibold">25-year net worth projection (expected case)</h2>
           <p className="text-xs text-muted-foreground">Tap or hover the chart to see any year</p>
         </div>
-        <ProjectionControls opts={opts} onChange={setOpts} />
+        <ProjectionControls opts={opts} onChange={setOpts} actual={data.actualSpend} cur={cur} />
         <div className="mt-4 h-72">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={chart} margin={{ left: 8, right: 8 }}>
@@ -310,8 +344,8 @@ function Dashboard() {
           The solid line is what you're likely to own minus what you owe each year, if your income,
           spending, debts and investments carry on as entered in My numbers. It's shown in future
           Naira, which buy less as prices rise — so the dashed line shows the same amount in{" "}
-          <b>today's money</b> after {data.profile?.inflation_rate ?? 0}% yearly inflation. That
-          dashed line is the one to judge your real progress by. Today you start at{" "}
+          <b>today's money</b> after {+(getAssumptions(data).inflation * 100).toFixed(2)}% yearly
+          inflation. That dashed line is the one to judge your real progress by. Today you start at{" "}
           <Num formula="Accounts + investments + property − all debts, converted at today's exchange rates. This is the left-most point on the chart.">
             {m(s.netWorth)}
           </Num>
@@ -666,13 +700,19 @@ function Donut({
 }
 
 const OPTS_KEY = "kudi-projection";
-type ProjectionOptions = { interest: InterestMode; protectInvestments: boolean };
+type ProjectionOptions = {
+  interest: InterestMode;
+  protectInvestments: boolean;
+  /** use real spending from imported statements for living costs, when there is any */
+  actualSpending: boolean;
+};
 
 /** Projection settings, remembered on this device. */
 function useProjectionOptions(): [ProjectionOptions, (o: ProjectionOptions) => void] {
   const [opts, setOpts] = useState<ProjectionOptions>({
     interest: "compound",
     protectInvestments: true,
+    actualSpending: true,
   });
   useEffect(() => {
     try {
@@ -683,6 +723,7 @@ function useProjectionOptions(): [ProjectionOptions, (o: ProjectionOptions) => v
         setOpts({
           interest: saved.interest === "simple" ? "simple" : "compound",
           protectInvestments: saved.protectInvestments !== false,
+          actualSpending: saved.actualSpending !== false,
         });
     } catch {
       /* use defaults */
@@ -702,12 +743,17 @@ function useProjectionOptions(): [ProjectionOptions, (o: ProjectionOptions) => v
 function ProjectionControls({
   opts,
   onChange,
+  actual,
+  cur,
 }: {
   opts: ProjectionOptions;
   onChange: (o: ProjectionOptions) => void;
+  /** real average monthly spending from statements, if any */
+  actual: { avgMonthly: number; months: number } | undefined;
+  cur: string;
 }) {
   return (
-    <div className="mt-4 flex flex-col gap-3 rounded-xl border border-border bg-secondary/40 p-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="mt-4 grid gap-3 rounded-xl border border-border bg-secondary/40 p-3 lg:grid-cols-[auto_1fr_1fr] lg:items-center">
       <div className="flex items-center gap-2">
         <span className="text-sm text-muted-foreground">Investment growth</span>
         <div
@@ -731,7 +777,7 @@ function ProjectionControls({
           ))}
         </div>
       </div>
-      <label className="flex cursor-pointer items-center justify-between gap-3 text-sm sm:justify-start">
+      <label className="flex cursor-pointer items-center justify-between gap-3 text-sm">
         <span>
           <span className="font-medium">Keep investments separate</span>
           <span className="block text-xs text-muted-foreground">
@@ -743,6 +789,22 @@ function ProjectionControls({
           onCheckedChange={(v) => onChange({ ...opts, protectInvestments: v })}
         />
       </label>
+      {actual && actual.months > 0 && (
+        <label className="flex cursor-pointer items-center justify-between gap-3 text-sm">
+          <span>
+            <span className="font-medium">Use my real spending</span>
+            <span className="block text-xs text-muted-foreground">
+              {formatMoney(actual.avgMonthly, "NGN")}/month average from your last {actual.months}{" "}
+              month{actual.months === 1 ? "" : "s"} of statements
+              {cur !== "NGN" ? " (in Naira)" : ""}, instead of the costs typed in My numbers.
+            </span>
+          </span>
+          <Switch
+            checked={opts.actualSpending}
+            onCheckedChange={(v) => onChange({ ...opts, actualSpending: v })}
+          />
+        </label>
+      )}
     </div>
   );
 }
