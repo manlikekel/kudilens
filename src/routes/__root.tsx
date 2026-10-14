@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
+import { toast } from "sonner";
 import { bootScript, registerServiceWorker, themeColor } from "@/lib/pwa";
 
 import appCss from "../styles.css?url";
@@ -140,7 +141,17 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  useEffect(registerServiceWorker, []);
+  useEffect(
+    () =>
+      registerServiceWorker(() =>
+        toast("KudiLens has been updated", {
+          description: "Refresh to use the latest version.",
+          action: { label: "Refresh", onClick: () => window.location.reload() },
+          duration: Infinity,
+        }),
+      ),
+    [],
+  );
 
   return (
     <QueryClientProvider client={queryClient}>
