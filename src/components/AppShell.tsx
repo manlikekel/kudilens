@@ -4,6 +4,8 @@ import {
   Bell,
   Compass,
   Download,
+  Eye,
+  EyeOff,
   FileText,
   Home,
   Lightbulb,
@@ -26,6 +28,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { cn } from "@/lib/utils";
 import { useFinance } from "@/lib/useFinance";
 import { useInstall } from "@/lib/pwa";
+import { usePrivacy } from "@/lib/privacy";
 import { getRates, missingCurrencies, rateLabel, usedCurrencies } from "@/lib/finance";
 
 /** Shows which exchange rates every converted figure uses, and warns when one is missing. */
@@ -115,6 +118,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [moreOpen, setMoreOpen] = useState(false);
   const { mode: installMode, install } = useInstall();
   const [iosHelp, setIosHelp] = useState(false);
+  const [hidden, setHidden] = usePrivacy();
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
@@ -162,6 +166,14 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           ))}
         </nav>
+        <button
+          onClick={() => setHidden(!hidden)}
+          aria-pressed={hidden}
+          className="mb-2 flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        >
+          {hidden ? <EyeOff className="size-[18px]" /> : <Eye className="size-[18px]" />}
+          {hidden ? "Show amounts" : "Hide amounts"}
+        </button>
         {installMode && (
           <button
             onClick={onInstall}
@@ -200,6 +212,15 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="flex h-14 items-center justify-between gap-3 px-safe">
           <Logo />
           <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setHidden(!hidden)}
+              aria-pressed={hidden}
+              aria-label={hidden ? "Show amounts" : "Hide amounts"}
+            >
+              {hidden ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
+            </Button>
             {installMode && (
               <Button variant="ghost" size="icon" onClick={onInstall} aria-label="Install app">
                 <Download className="size-5" />
@@ -223,7 +244,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             {current.label}
           </p>
         )}
-        <div key={pathname} className="mt-3 animate-rise lg:mt-4">
+        <div key={`${pathname}:${hidden}`} className="mt-3 animate-rise lg:mt-4">
           {children}
         </div>
       </main>

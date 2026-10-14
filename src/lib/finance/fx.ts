@@ -4,6 +4,8 @@
  * any of them (e.g. the parallel-market Naira rate) on their profile.
  * A missing rate is never guessed: convert() returns 0 and missingCurrencies() reports it.
  */
+import { amountsHidden } from "./mask";
+
 export const CURRENCIES = ["NGN", "USD", "GBP", "EUR", "CAD"] as const;
 export type CurrencyCode = (typeof CURRENCIES)[number];
 
@@ -69,12 +71,17 @@ const LOCALE: Record<string, string> = { NGN: "en-NG", USD: "en-US", GBP: "en-GB
 export function formatMoney(amount: number, currency: string, opts: { compact?: boolean } = {}): string {
   const compact = opts.compact ?? true;
   try {
-    return new Intl.NumberFormat(LOCALE[currency] ?? "en-US", {
+    const fmt = new Intl.NumberFormat(LOCALE[currency] ?? "en-US", {
       style: "currency",
       currency,
       notation: compact ? "compact" : "standard",
       maximumFractionDigits: compact ? 1 : 0,
-    }).format(Number.isFinite(amount) ? amount : 0);
+    });
+    if (amountsHidden()) {
+      const symbol = fmt.formatToParts(0).find((p) => p.type === "currency")?.value ?? currency;
+      return `${symbol}•••`;
+    }
+    return fmt.format(Number.isFinite(amount) ? amount : 0);
   } catch {
     return `${currency} ${Math.round(amount).toLocaleString()}`;
   }
