@@ -57,3 +57,47 @@ describe("live market assumptions", () => {
     expect(correlation([1, 1, 1], [1, 2, 3])).toBeNull();
   });
 });
+
+import { debtFreePlan } from "./debtfree";
+
+describe("debt-free countdown", () => {
+  const today = new Date(2026, 9, 14);
+  const withDebts = (debts: FinanceData["debts"]): FinanceData => ({
+    profile: null,
+    debts,
+    investments: [],
+    flows: [],
+    family: [],
+    fxRates: [{ currency: "NGN", per_usd: 1500, as_of: "2026-10-01T00:00:00Z" }],
+  });
+  const debt = (id: string, balance: number, rate: number, minimum: number) => ({
+    id,
+    name: id,
+    kind: "loan",
+    balance,
+    currency: "NGN",
+    interest_rate: rate,
+    minimum_payment: minimum,
+    notes: null,
+  });
+  it("rolls each cleared payment onto the next debt", () => {
+    const plan = debtFreePlan(
+      withDebts([debt("a", 300_000, 0, 100_000), debt("b", 600_000, 0, 100_000)]),
+      today,
+    );
+    // a: 3 months at 100k; then b gets 200k/month: 600k − 3×100k = 300k left → 2 more months
+    expect(plan.milestones.map((m) => [m.id, m.months])).toEqual([
+      ["a", 3],
+      ["b", 5],
+    ]);
+    expect(plan.months).toBe(5);
+    expect(plan.debtFreeDate).toEqual(new Date(2027, 2, 1));
+    expect(plan.totalInterest).toBe(0);
+  });
+  it("says never when payments don't cover interest", () => {
+    expect(debtFreePlan(withDebts([debt("c", 1_000_000, 36, 10_000)]), today).months).toBeNull();
+  });
+  it("no debts means already debt-free", () => {
+    expect(debtFreePlan(withDebts([]), today).months).toBe(0);
+  });
+});

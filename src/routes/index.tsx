@@ -33,6 +33,7 @@ import {
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Meaning, Num } from "@/components/kudi";
+import { DebtCountdown } from "@/components/dashboard/DebtCountdown";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -229,6 +230,8 @@ function Dashboard() {
           className="col-span-2 lg:col-span-1"
         />
       </div>
+
+      <DebtCountdown data={data} />
 
       <section className="panel p-5">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">

@@ -15,3 +15,4 @@ export * from "./summary";
 export * from "./transactions";
 export * from "./wealth";
 export * from "./market";
+export * from "./debtfree";
