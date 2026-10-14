@@ -29,6 +29,8 @@ import { cn } from "@/lib/utils";
 import { useFinance } from "@/lib/useFinance";
 import { useInstall } from "@/lib/pwa";
 import { usePrivacy } from "@/lib/privacy";
+import { useAppLock } from "@/lib/applock";
+import { LockScreen, SecondStepScreen, useNeedsSecondStep } from "@/components/Security";
 import { getRates, missingCurrencies, rateLabel, usedCurrencies } from "@/lib/finance";
 
 /** Shows which exchange rates every converted figure uses, and warns when one is missing. */
@@ -119,6 +121,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { mode: installMode, install } = useInstall();
   const [iosHelp, setIosHelp] = useState(false);
   const [hidden, setHidden] = usePrivacy();
+  const { locked, config: lockConfig } = useAppLock();
+  const [needsCode, codeDone] = useNeedsSecondStep(user?.id);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
@@ -144,6 +148,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     else await install();
   };
   const current = allItems.find((i) => i.to === pathname);
+
+  if (needsCode) return <SecondStepScreen onDone={codeDone} onSignOut={signOut} />;
+  if (locked && lockConfig) return <LockScreen config={lockConfig} onSignOut={signOut} />;
 
   return (
     <div className="min-h-dvh lg:pl-[264px]">

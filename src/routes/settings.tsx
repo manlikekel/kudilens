@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { getTheme, isStandalone, setTheme, useInstall, type ThemeChoice } from "@/lib/pwa";
 import { cn } from "@/lib/utils";
 import { CountrySelect } from "@/components/CountrySelect";
+import { AppLockSettings, TwoStepSettings } from "@/components/SecuritySettings";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -83,6 +84,8 @@ function Settings() {
         </p>
         <CountrySelect className="mt-4 sm:w-72" />
       </section>
+      <AppLockSettings email={user.email ?? ""} />
+      <TwoStepSettings />
       <Appearance />
       <InstallApp />
       <EmailForm current={user.email ?? ""} />
