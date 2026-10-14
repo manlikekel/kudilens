@@ -158,6 +158,33 @@ export type Database = {
         }
         Relationships: []
       }
+      budgets: {
+        Row: {
+          category: string
+          created_at: string
+          currency: string
+          id: string
+          monthly_limit: number
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          currency?: string
+          id?: string
+          monthly_limit: number
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          monthly_limit?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       cash_flows: {
         Row: {
           category: string
@@ -457,6 +484,7 @@ export type Database = {
           id: string
           label: string
           months: number[]
+          saved: number
           user_id: string
         }
         Insert: {
@@ -466,6 +494,7 @@ export type Database = {
           id?: string
           label: string
           months?: number[]
+          saved?: number
           user_id: string
         }
         Update: {
@@ -475,6 +504,7 @@ export type Database = {
           id?: string
           label?: string
           months?: number[]
+          saved?: number
           user_id?: string
         }
         Relationships: []
@@ -502,6 +532,48 @@ export type Database = {
           net_worth?: number | null
           period?: string
           report?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
+      net_worth_snapshots: {
+        Row: {
+          assets: number
+          cash: number
+          created_at: string
+          currency: string
+          debt: number
+          id: string
+          investments: number
+          month: string
+          net_worth: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assets?: number
+          cash?: number
+          created_at?: string
+          currency?: string
+          debt?: number
+          id?: string
+          investments?: number
+          month: string
+          net_worth: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assets?: number
+          cash?: number
+          created_at?: string
+          currency?: string
+          debt?: number
+          id?: string
+          investments?: number
+          month?: string
+          net_worth?: number
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -581,6 +653,30 @@ export type Database = {
           salary_growth?: number
           updated_at?: string
           usd_ngn_rate?: number
+        }
+        Relationships: []
+      }
+      scenarios: {
+        Row: {
+          changes: Json
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          changes?: Json
+          created_at?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          changes?: Json
+          created_at?: string
+          id?: string
+          name?: string
+          user_id?: string
         }
         Relationships: []
       }
