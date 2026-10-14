@@ -38,6 +38,12 @@ export const COUNTRIES: Country[] = [
         registerUrl: "https://sec.gov.ng/",
         registerLabel: "SEC Nigeria registered operators",
       },
+      {
+        name: "Central Bank of Nigeria",
+        short: "CBN",
+        registerUrl: "https://www.cbn.gov.ng/",
+        registerLabel: "CBN licensed banks",
+      },
     ],
     accounts: [
       {
@@ -144,7 +150,8 @@ export function countryFromCurrency(currency: string | null | undefined): Countr
   );
 }
 
-export type PlatformKind = "Fund manager" | "Investment app" | "Stockbroker" | "Robo-advisor";
+export type PlatformKind =
+  "Fund manager" | "Investment app" | "Stockbroker" | "Robo-advisor" | "Savings bank";
 
 export interface Platform {
   name: string;
@@ -159,6 +166,31 @@ export interface Platform {
 
 export const PLATFORMS: Record<CountryCode, Platform[]> = {
   NG: [
+    {
+      name: "PiggyVest",
+      kind: "Investment app",
+      offers: "Automated savings, fixed-term savings, dollar savings and curated investments",
+      licence:
+        "SEC Fund Manager via affiliate PV Capital, plus a CBN microfinance bank; check register",
+      url: "https://www.piggyvest.com/",
+      bestFor: "Building a daily or weekly savings habit with locked savings",
+    },
+    {
+      name: "FairMoney Microfinance Bank",
+      kind: "Savings bank",
+      offers: "High-interest savings, target savings and fixed deposits",
+      licence: "CBN-licensed microfinance bank, deposits NDIC-insured up to the legal limit",
+      url: "https://fairmoney.io/",
+      bestFor: "Earning interest on emergency cash you may need quickly",
+    },
+    {
+      name: "Ladda",
+      kind: "Investment app",
+      offers: "Naira and dollar savings, mutual funds, global stocks",
+      licence: "Licence not confirmed; check the SEC register before investing",
+      url: "https://getladda.com/",
+      bestFor: "Combining savings, funds and financial education in one app",
+    },
     {
       name: "Cowrywise",
       kind: "Investment app",

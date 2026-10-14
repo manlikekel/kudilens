@@ -78,7 +78,7 @@ function Invest() {
           <TabsTrigger value="tools">My wealth check</TabsTrigger>
         </TabsList>
         <TabsContent value="platforms" className="mt-5">
-          <Platforms country={country} />
+          <Platforms key={country.code} country={country} />
         </TabsContent>
         <TabsContent value="funds" className="mt-5">
           {country.code === "NG" ? (
@@ -98,11 +98,18 @@ function Invest() {
 
 /* ---------------- platforms ---------------- */
 
-const KINDS: PlatformKind[] = ["Investment app", "Fund manager", "Stockbroker", "Robo-advisor"];
+const KINDS: PlatformKind[] = [
+  "Investment app",
+  "Fund manager",
+  "Stockbroker",
+  "Robo-advisor",
+  "Savings bank",
+];
 
 function Platforms({ country }: { country: Country }) {
   const [kind, setKind] = useState<PlatformKind | "All">("All");
-  const list = PLATFORMS[country.code].filter((p) => kind === "All" || p.kind === kind);
+  const all = PLATFORMS[country.code];
+  const list = all.some((p) => p.kind === kind) ? all.filter((p) => p.kind === kind) : all;
   return (
     <div className="space-y-5">
       <section className="panel flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
@@ -136,7 +143,12 @@ function Platforms({ country }: { country: Country }) {
       </section>
 
       <div className="no-scrollbar flex gap-2 overflow-x-auto">
-        {(["All", ...KINDS] as const).map((k) => (
+        {(
+          [
+            "All",
+            ...KINDS.filter((k) => PLATFORMS[country.code].some((p) => p.kind === k)),
+          ] as const
+        ).map((k) => (
           <button
             key={k}
             onClick={() => setKind(k)}
