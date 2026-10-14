@@ -26,4 +26,4 @@
 - [ ] 9. Reminders & push notifications
 - [ ] 10. Household sharing
 - [ ] 13. Polish
-- [ ] Email sending from notify.kudilens.com
+- [ ] Email sending from notify.kudilens.com — set up; waiting on DNS records at the domain provider

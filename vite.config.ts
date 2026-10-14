@@ -9,7 +9,7 @@ import { loadEnv } from "vite";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 // Server-only env (no VITE_ prefix) for server routes; never added to client defines.
-Object.assign(process.env, loadEnv(process.env.NODE_ENV === "production" ? "production" : "development", process.cwd(), ""));
+Object.assign(process.env, loadEnv(process.env['NODE_ENV'] === "production" ? "production" : "development", process.cwd(), ""));
 
 export default defineConfig({
   tanstackStart: {
