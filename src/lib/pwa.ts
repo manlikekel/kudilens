@@ -52,14 +52,70 @@ export const themeColor = THEME_COLOR;
 /* ---------------- service worker ---------------- */
 
 /** Registers the offline service worker on the live site only (not in dev or inside an editor iframe). */
-export function registerServiceWorker() {
+export function registerServiceWorker(onUpdated?: () => void) {
   if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
   if (import.meta.env.DEV || window.self !== window.top) return;
-  window.addEventListener("load", () => {
-    navigator.serviceWorker
-      .register("/sw.js")
-      .catch((err) => console.warn("Service worker not registered", err));
-  });
+
+  const register = async () => {
+    try {
+      const hadController = !!navigator.serviceWorker.controller;
+      const reg = await navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" });
+      // a new version took over while the app was open: let the user refresh into it
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (hadController) onUpdated?.();
+      });
+      // look for a new version when the app comes back to the foreground
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") void reg.update();
+      });
+      await registerBackgroundRefresh(reg);
+    } catch (err) {
+      console.warn("Service worker not registered", err);
+    }
+  };
+  // React effects run after the load event has usually fired, so don't wait for it again
+  if (document.readyState === "complete") void register();
+  else window.addEventListener("load", () => void register(), { once: true });
+}
+
+type SyncRegistration = ServiceWorkerRegistration & {
+  sync?: { register: (tag: string) => Promise<void> };
+  periodicSync?: { register: (tag: string, opts: { minInterval: number }) => Promise<void> };
+};
+
+/** Market data refreshes when the connection returns, and daily for the installed app where supported. */
+async function registerBackgroundRefresh(reg: SyncRegistration) {
+  try {
+    await reg.sync?.register("refresh-market");
+  } catch {
+    /* background sync not supported */
+  }
+  try {
+    const status = await navigator.permissions.query({
+      name: "periodic-background-sync" as PermissionName,
+    });
+    if (status.state === "granted")
+      await reg.periodicSync?.register("refresh-market", { minInterval: 24 * 3600_000 });
+  } catch {
+    /* periodic sync only exists for installed apps on Chromium */
+  }
+}
+
+/** Online / offline status for showing a banner. */
+export function useOnline() {
+  const [online, setOnline] = useState(true);
+  useEffect(() => {
+    setOnline(navigator.onLine);
+    const on = () => setOnline(true);
+    const off = () => setOnline(false);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    return () => {
+      window.removeEventListener("online", on);
+      window.removeEventListener("offline", off);
+    };
+  }, []);
+  return online;
 }
 
 /* ---------------- install prompt ---------------- */

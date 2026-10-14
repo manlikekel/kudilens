@@ -29,7 +29,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useFinance } from "@/lib/useFinance";
-import { useInstall } from "@/lib/pwa";
+import { useInstall, useOnline } from "@/lib/pwa";
 import { Tour } from "@/components/Tour";
 import { usePrivacy } from "@/lib/privacy";
 import { useAppLock } from "@/lib/applock";
@@ -128,6 +128,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { mode: installMode, install } = useInstall();
   const [iosHelp, setIosHelp] = useState(false);
   const [hidden, setHidden] = usePrivacy();
+  const online = useOnline();
   const { locked, config: lockConfig } = useAppLock();
   const [needsCode, codeDone] = useNeedsSecondStep(user?.id);
 
@@ -254,6 +255,14 @@ export function AppShell({ children }: { children: ReactNode }) {
       </header>
 
       <main className="mx-auto max-w-6xl px-safe pt-4 pb-[calc(7rem+env(safe-area-inset-bottom))] sm:px-6 lg:px-10 lg:pt-8 lg:pb-12">
+        {!online && (
+          <div
+            role="status"
+            className="mb-2 rounded-xl bg-warning/12 px-4 py-2.5 text-center text-xs text-warning print:hidden"
+          >
+            You&apos;re offline. Showing what was last loaded; changes need a connection.
+          </div>
+        )}
         <RateBar userId={user.id} />
         {current && (
           <p className="mt-1 text-xs font-medium uppercase tracking-[0.14em] text-primary lg:hidden print:hidden">
