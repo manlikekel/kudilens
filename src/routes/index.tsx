@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   Area,
@@ -42,6 +42,7 @@ import {
 } from "@/components/dashboard/Growth";
 import { useRecentTxns, useRecordSnapshot, useSnapshots } from "@/lib/useGrowth";
 import { SafeToSpend } from "@/components/dashboard/SafeToSpend";
+import { onboarded } from "@/lib/onboarding";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -102,6 +103,15 @@ function Dashboard() {
       pots: investmentGrowth(data, 25, opts.interest),
     };
   }, [data, extra, opts]);
+
+  // brand-new account with nothing entered: start the guided setup once
+  const navigate = useNavigate();
+  const isEmpty =
+    !!data &&
+    data.debts.length + data.investments.length + data.flows.length + data.family.length === 0;
+  useEffect(() => {
+    if (isEmpty && !onboarded()) navigate({ to: "/welcome" });
+  }, [isEmpty, navigate]);
 
   if (isLoading) return <p className="text-muted-foreground">Crunching your numbers…</p>;
   if (error) return <p className="text-destructive">Could not load data: {error.message}</p>;
@@ -219,7 +229,7 @@ function Dashboard() {
             </p>
           </div>
           <Button asChild>
-            <Link to="/records">Add my numbers</Link>
+            <Link to="/welcome">Start the 2-minute setup</Link>
           </Button>
         </div>
       )}
