@@ -17,6 +17,7 @@ import { Route as InsightsRouteImport } from './routes/insights'
 import { Route as PlanRouteImport } from './routes/plan'
 import { Route as RecordsRouteImport } from './routes/records'
 import { Route as ReviewRouteImport } from './routes/review'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SpendingRouteImport } from './routes/spending'
 import { Route as ApiAdvisorRouteImport } from './routes/api/advisor'
 import { Route as ApiCategoriseRouteImport } from './routes/api/categorise'
@@ -64,6 +65,11 @@ const RecordsRoute = RecordsRouteImport.update({
 const ReviewRoute = ReviewRouteImport.update({
   id: '/review',
   path: '/review',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SpendingRoute = SpendingRouteImport.update({
@@ -116,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/plan': typeof PlanRoute
   '/records': typeof RecordsRoute
   '/review': typeof ReviewRoute
+  '/settings': typeof SettingsRoute
   '/spending': typeof SpendingRoute
   '/api/advisor': typeof ApiAdvisorRoute
   '/api/categorise': typeof ApiCategoriseRoute
@@ -134,6 +141,7 @@ export interface FileRoutesByTo {
   '/plan': typeof PlanRoute
   '/records': typeof RecordsRoute
   '/review': typeof ReviewRoute
+  '/settings': typeof SettingsRoute
   '/spending': typeof SpendingRoute
   '/api/advisor': typeof ApiAdvisorRoute
   '/api/categorise': typeof ApiCategoriseRoute
@@ -153,6 +161,7 @@ export interface FileRoutesById {
   '/plan': typeof PlanRoute
   '/records': typeof RecordsRoute
   '/review': typeof ReviewRoute
+  '/settings': typeof SettingsRoute
   '/spending': typeof SpendingRoute
   '/api/advisor': typeof ApiAdvisorRoute
   '/api/categorise': typeof ApiCategoriseRoute
@@ -173,6 +182,7 @@ export interface FileRouteTypes {
     | '/plan'
     | '/records'
     | '/review'
+    | '/settings'
     | '/spending'
     | '/api/advisor'
     | '/api/categorise'
@@ -191,6 +201,7 @@ export interface FileRouteTypes {
     | '/plan'
     | '/records'
     | '/review'
+    | '/settings'
     | '/spending'
     | '/api/advisor'
     | '/api/categorise'
@@ -209,6 +220,7 @@ export interface FileRouteTypes {
     | '/plan'
     | '/records'
     | '/review'
+    | '/settings'
     | '/spending'
     | '/api/advisor'
     | '/api/categorise'
@@ -228,6 +240,7 @@ export interface RootRouteChildren {
   PlanRoute: typeof PlanRoute
   RecordsRoute: typeof RecordsRoute
   ReviewRoute: typeof ReviewRoute
+  SettingsRoute: typeof SettingsRoute
   SpendingRoute: typeof SpendingRoute
   ApiAdvisorRoute: typeof ApiAdvisorRoute
   ApiCategoriseRoute: typeof ApiCategoriseRoute
@@ -294,6 +307,13 @@ declare module '@tanstack/react-router' {
       path: '/review'
       fullPath: '/review'
       preLoaderRoute: typeof ReviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/spending': {
@@ -364,6 +384,7 @@ const rootRouteChildren: RootRouteChildren = {
   PlanRoute: PlanRoute,
   RecordsRoute: RecordsRoute,
   ReviewRoute: ReviewRoute,
+  SettingsRoute: SettingsRoute,
   SpendingRoute: SpendingRoute,
   ApiAdvisorRoute: ApiAdvisorRoute,
   ApiCategoriseRoute: ApiCategoriseRoute,
