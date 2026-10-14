@@ -6,6 +6,8 @@ import { AppShell } from "@/components/AppShell";
 import { CountrySelect } from "@/components/CountrySelect";
 import { Disclaimer, Meaning, Num } from "@/components/kudi";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -27,6 +29,7 @@ import {
   type PlatformKind,
 } from "@/lib/invest/directory";
 import { useCountry } from "@/lib/invest/useCountry";
+import type { NgFundReport } from "@/lib/invest/secnav";
 import { useFinance } from "@/lib/useFinance";
 import { cn } from "@/lib/utils";
 import type { FundQuote } from "./api/funds";
@@ -403,24 +406,153 @@ function FundCard({
 }
 
 function NigeriaFunds() {
+  const [group, setGroup] = useState("All");
+  const [query, setQuery] = useState("");
+  const [showAll, setShowAll] = useState(false);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["ng-funds"],
+    queryFn: async () => {
+      const res = await fetch("/api/ng-funds");
+      if (!res.ok) throw new Error(await res.text());
+      return (await res.json()) as NgFundReport & { source: string };
+    },
+    staleTime: 3600_000,
+  });
+  const groupOf = (category: string) => category.split(" · ")[0]!;
+  const groups = useMemo(
+    () => ["All", ...new Set((data?.funds ?? []).map((f) => groupOf(f.category)))],
+    [data],
+  );
+  const rows = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return (data?.funds ?? [])
+      .filter((f) => group === "All" || groupOf(f.category) === group)
+      .filter((f) => !q || `${f.name} ${f.manager}`.toLowerCase().includes(q))
+      .sort((a, b) => (b.yieldYtd ?? -Infinity) - (a.yieldYtd ?? -Infinity));
+  }, [data, group, query]);
+  const visible = showAll ? rows : rows.slice(0, 25);
+
   return (
     <div className="space-y-4">
       <section className="panel p-5">
-        <h2 className="text-lg font-semibold">Nigerian mutual funds</h2>
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+          <h2 className="text-lg font-semibold">Nigerian mutual funds</h2>
+          {data?.weekEnded && (
+            <p className="text-xs text-muted-foreground">
+              SEC weekly report, week ended{" "}
+              {data.weekEnded.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}
+            </p>
+          )}
+        </div>
         <p className="mt-1 text-sm text-muted-foreground">
-          There's no free live feed for Nigerian fund prices yet, so we don't show returns we can't
-          verify. The SEC publishes every registered fund's price and yield in its weekly valuation
-          report. Compare the latest yields there or on each fund manager's site.
+          Every SEC-registered fund, from the SEC&apos;s weekly valuation report. Money market funds
+          show their current yearly yield; other funds show their return so far this year. Dollar
+          funds are measured in dollars.
         </p>
+
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search a fund or manager, e.g. Cowry, Stanbic"
+            className="sm:max-w-xs"
+          />
+          <div className="no-scrollbar flex gap-2 overflow-x-auto">
+            {groups.map((g) => (
+              <button
+                key={g}
+                onClick={() => setGroup(g)}
+                className={cn(
+                  "shrink-0 rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent sm:text-sm",
+                  group === g && "border-primary bg-primary/10 text-primary",
+                )}
+              >
+                {g.replace(/ Funds?$/, "")}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {isLoading && (
+          <p className="mt-4 text-sm text-muted-foreground">Loading the latest SEC report…</p>
+        )}
+        {error && (
+          <p className="mt-4 text-sm text-destructive">
+            Couldn&apos;t load the SEC report right now. {(error as Error).message}
+          </p>
+        )}
+
+        {data && (
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full min-w-[620px] text-sm">
+              <thead className="text-left text-xs text-muted-foreground">
+                <tr>
+                  <th className="py-2 pr-3 font-normal">Fund</th>
+                  <th className="py-2 pr-3 font-normal">Type</th>
+                  <th className="py-2 pr-3 text-right font-normal">Yield / return</th>
+                  <th className="py-2 pr-3 text-right font-normal">This week</th>
+                  <th className="py-2 pr-3 text-right font-normal">Unit price</th>
+                  <th className="py-2 text-right font-normal">Investors</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visible.map((f) => {
+                  const mm = /money market/i.test(f.category);
+                  return (
+                    <tr key={`${f.name}-${f.manager}`} className="border-t border-border/70">
+                      <td className="py-2 pr-3">
+                        <p className="font-medium">{f.name}</p>
+                        <p className="text-xs text-muted-foreground">{f.manager}</p>
+                      </td>
+                      <td className="py-2 pr-3 text-xs text-muted-foreground">{f.category}</td>
+                      <td
+                        className={cn(
+                          "numeric py-2 pr-3 text-right font-semibold",
+                          (f.yieldYtd ?? 0) >= 0 ? "text-success" : "text-destructive",
+                        )}
+                      >
+                        {pct(f.yieldYtd)}
+                        <span className="block text-[10px] font-normal text-muted-foreground">
+                          {mm ? "per year" : "this year"}
+                        </span>
+                      </td>
+                      <td className="numeric py-2 pr-3 text-right text-muted-foreground">
+                        {mm ? "—" : pct(f.yieldWtd)}
+                      </td>
+                      <td className="numeric py-2 pr-3 text-right">
+                        {f.price != null
+                          ? formatMoney(f.price, f.priceCurrency, { compact: false })
+                          : "—"}
+                      </td>
+                      <td className="numeric py-2 text-right text-muted-foreground">
+                        {f.unitholders?.toLocaleString() ?? "—"}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            {rows.length > visible.length && (
+              <Button variant="outline" className="mt-3 w-full" onClick={() => setShowAll(true)}>
+                Show all {rows.length} funds
+              </Button>
+            )}
+            {rows.length === 0 && (
+              <p className="py-6 text-center text-sm text-muted-foreground">No funds match.</p>
+            )}
+          </div>
+        )}
         <a
-          href={NG_FUND_REPORT_URL}
+          href={data?.source ?? NG_FUND_REPORT_URL}
           target="_blank"
           rel="noreferrer"
-          className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm hover:bg-accent"
+          className="mt-4 inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
         >
-          SEC Nigeria website <ExternalLink className="size-3.5" />
+          Open the SEC report <ExternalLink className="size-3.5" />
         </a>
       </section>
+
+      <h3 className="pt-2 text-base font-semibold">Which type of fund is for what</h3>
       <div className="grid gap-3 md:grid-cols-2">
         {NG_FUND_TYPES.map((t) => (
           <article key={t.name} className="panel p-5">
@@ -434,7 +566,8 @@ function NigeriaFunds() {
         ))}
       </div>
       <Meaning>
-        Already invested in a fund? Add it under{" "}
+        Yields are what each fund reported to the SEC; past returns don&apos;t guarantee future
+        ones. Already invested in a fund? Add it under{" "}
         <Link to="/records" className="text-primary underline">
           My numbers → Investments
         </Link>{" "}

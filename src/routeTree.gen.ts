@@ -28,6 +28,7 @@ import { Route as ApiCategoriseRouteImport } from './routes/api/categorise'
 import { Route as ApiFundsRouteImport } from './routes/api/funds'
 import { Route as ApiIdeasRouteImport } from './routes/api/ideas'
 import { Route as ApiInsightsRouteImport } from './routes/api/insights'
+import { Route as ApiNgFundsRouteImport } from './routes/api/ng-funds'
 import { Route as ApiReviewRouteImport } from './routes/api/review'
 import { Route as ApiStatementsRouteImport } from './routes/api/statements'
 import { Route as ApiPublicHooksRefreshFxRouteImport } from './routes/api/public/hooks/refresh-fx'
@@ -127,6 +128,11 @@ const ApiInsightsRoute = ApiInsightsRouteImport.update({
   path: '/api/insights',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiNgFundsRoute = ApiNgFundsRouteImport.update({
+  id: '/api/ng-funds',
+  path: '/api/ng-funds',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiReviewRoute = ApiReviewRouteImport.update({
   id: '/api/review',
   path: '/api/review',
@@ -163,6 +169,7 @@ export interface FileRoutesByFullPath {
   '/api/funds': typeof ApiFundsRoute
   '/api/ideas': typeof ApiIdeasRoute
   '/api/insights': typeof ApiInsightsRoute
+  '/api/ng-funds': typeof ApiNgFundsRoute
   '/api/review': typeof ApiReviewRoute
   '/api/statements': typeof ApiStatementsRoute
   '/api/public/hooks/refresh-fx': typeof ApiPublicHooksRefreshFxRoute
@@ -187,6 +194,7 @@ export interface FileRoutesByTo {
   '/api/funds': typeof ApiFundsRoute
   '/api/ideas': typeof ApiIdeasRoute
   '/api/insights': typeof ApiInsightsRoute
+  '/api/ng-funds': typeof ApiNgFundsRoute
   '/api/review': typeof ApiReviewRoute
   '/api/statements': typeof ApiStatementsRoute
   '/api/public/hooks/refresh-fx': typeof ApiPublicHooksRefreshFxRoute
@@ -212,6 +220,7 @@ export interface FileRoutesById {
   '/api/funds': typeof ApiFundsRoute
   '/api/ideas': typeof ApiIdeasRoute
   '/api/insights': typeof ApiInsightsRoute
+  '/api/ng-funds': typeof ApiNgFundsRoute
   '/api/review': typeof ApiReviewRoute
   '/api/statements': typeof ApiStatementsRoute
   '/api/public/hooks/refresh-fx': typeof ApiPublicHooksRefreshFxRoute
@@ -238,6 +247,7 @@ export interface FileRouteTypes {
     | '/api/funds'
     | '/api/ideas'
     | '/api/insights'
+    | '/api/ng-funds'
     | '/api/review'
     | '/api/statements'
     | '/api/public/hooks/refresh-fx'
@@ -262,6 +272,7 @@ export interface FileRouteTypes {
     | '/api/funds'
     | '/api/ideas'
     | '/api/insights'
+    | '/api/ng-funds'
     | '/api/review'
     | '/api/statements'
     | '/api/public/hooks/refresh-fx'
@@ -286,6 +297,7 @@ export interface FileRouteTypes {
     | '/api/funds'
     | '/api/ideas'
     | '/api/insights'
+    | '/api/ng-funds'
     | '/api/review'
     | '/api/statements'
     | '/api/public/hooks/refresh-fx'
@@ -311,6 +323,7 @@ export interface RootRouteChildren {
   ApiFundsRoute: typeof ApiFundsRoute
   ApiIdeasRoute: typeof ApiIdeasRoute
   ApiInsightsRoute: typeof ApiInsightsRoute
+  ApiNgFundsRoute: typeof ApiNgFundsRoute
   ApiReviewRoute: typeof ApiReviewRoute
   ApiStatementsRoute: typeof ApiStatementsRoute
   ApiPublicHooksRefreshFxRoute: typeof ApiPublicHooksRefreshFxRoute
@@ -451,6 +464,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiInsightsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/ng-funds': {
+      id: '/api/ng-funds'
+      path: '/api/ng-funds'
+      fullPath: '/api/ng-funds'
+      preLoaderRoute: typeof ApiNgFundsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/review': {
       id: '/api/review'
       path: '/api/review'
@@ -495,6 +515,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiFundsRoute: ApiFundsRoute,
   ApiIdeasRoute: ApiIdeasRoute,
   ApiInsightsRoute: ApiInsightsRoute,
+  ApiNgFundsRoute: ApiNgFundsRoute,
   ApiReviewRoute: ApiReviewRoute,
   ApiStatementsRoute: ApiStatementsRoute,
   ApiPublicHooksRefreshFxRoute: ApiPublicHooksRefreshFxRoute,
