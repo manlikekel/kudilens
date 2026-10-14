@@ -3,6 +3,28 @@ import { supabase } from "@/integrations/supabase/client";
 import { actualSpendNGN } from "./finance";
 import type { Account, Asset, CashFlow, Debt, FamilyMember, FinanceData, FxRateRow, Goal, Investment, LumpCost, Profile } from "./finance";
 
+const DAY_MS = 86_400_000;
+
+/**
+ * Backstop for the daily cron: if the newest official rate is over a day old, ask the server to
+ * refresh and return the new rows. Any failure keeps the rates we already have.
+ */
+async function freshRates(rows: FxRateRow[]): Promise<FxRateRow[]> {
+  const newest = Math.max(0, ...rows.map((r) => new Date(r.as_of).getTime()));
+  if (Date.now() - newest < DAY_MS) return rows;
+  try {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) return rows;
+    const res = await fetch("/api/public/hooks/refresh-fx", { method: "POST", headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) return rows;
+    const again = await supabase.from("fx_rates").select("*");
+    return again.error ? rows : ((again.data ?? []) as FxRateRow[]);
+  } catch {
+    return rows;
+  }
+}
+
 async function loadFinance(userId: string): Promise<FinanceData> {
   const [profile, debts, investments, flows, family, goals, lumps, accounts, assets, fx, txns] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
@@ -24,6 +46,7 @@ async function loadFinance(userId: string): Promise<FinanceData> {
     console.error("Could not load finance data", err);
     throw new Error(err.message);
   }
+  const fxRates = await freshRates((fx.data ?? []) as FxRateRow[]);
   return {
     profile: (profile.data as Profile | null) ?? null,
     debts: (debts.data ?? []) as Debt[],
@@ -34,8 +57,8 @@ async function loadFinance(userId: string): Promise<FinanceData> {
     lumps: (lumps.data ?? []) as LumpCost[],
     accounts: (accounts.data ?? []) as Account[],
     assets: (assets.data ?? []) as Asset[],
-    fxRates: (fx.data ?? []) as FxRateRow[],
-    actualSpend: actualSpendNGN(txns.data ?? [], (fx.data ?? []) as FxRateRow[], ((profile.data as Profile | null)?.fx_overrides as Record<string, unknown>) ?? {}),
+    fxRates,
+    actualSpend: actualSpendNGN(txns.data ?? [], fxRates, ((profile.data as Profile | null)?.fx_overrides as Record<string, unknown>) ?? {}),
   };
 }
 
