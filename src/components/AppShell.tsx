@@ -15,6 +15,7 @@ import {
   Share,
   SquarePlus,
   Table2,
+  TrendingUp,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -65,6 +66,7 @@ const groups: { label: string; items: NavItem[] }[] = [
     items: [
       { to: "/", label: "Dashboard", icon: Home },
       { to: "/plan", label: "Plan", icon: Compass },
+      { to: "/invest", label: "Invest", icon: TrendingUp },
       { to: "/spending", label: "Spending", icon: Receipt },
       { to: "/insights", label: "Insights", icon: Bell },
     ],
@@ -87,7 +89,7 @@ const groups: { label: string; items: NavItem[] }[] = [
 ];
 const allItems = groups.flatMap((g) => g.items);
 /** Bottom tab bar on phones; everything else lives under "More". */
-const tabs = ["/", "/plan", "/spending", "/advisor"];
+const tabs = ["/", "/plan", "/invest", "/advisor"];
 const tabItems = tabs.map((t) => allItems.find((i) => i.to === t)!);
 const moreItems = allItems.filter((i) => !tabs.includes(i.to));
 

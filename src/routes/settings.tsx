@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { getTheme, isStandalone, setTheme, useInstall, type ThemeChoice } from "@/lib/pwa";
 import { cn } from "@/lib/utils";
+import { CountrySelect } from "@/components/CountrySelect";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -75,6 +76,13 @@ function Settings() {
         </div>
       </section>
 
+      <section className="panel p-5">
+        <h2 className="text-lg font-semibold">Country</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Sets which regulators, investment platforms and funds the Invest page shows.
+        </p>
+        <CountrySelect className="mt-4 sm:w-72" />
+      </section>
       <Appearance />
       <InstallApp />
       <EmailForm current={user.email ?? ""} />

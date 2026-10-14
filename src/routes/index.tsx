@@ -759,14 +759,16 @@ function YearByYear({ points, cur }: { points: ProjectionPoint[]; cur: string })
         <span className="text-muted-foreground transition-transform group-open:rotate-180">⌄</span>
       </summary>
       <div className="overflow-x-auto border-t border-border">
-        <table className="w-full min-w-[640px] text-right text-xs sm:text-sm">
+        <table className="w-full min-w-[820px] text-right text-xs sm:text-sm">
           <thead className="text-muted-foreground">
             <tr>
               <th className="px-3 py-2 text-left font-normal">Year</th>
               <th className="px-3 py-2 font-normal">Start</th>
               <th className="px-3 py-2 font-normal">Investment growth</th>
               <th className="px-3 py-2 font-normal">Property &amp; cash growth</th>
-              <th className="px-3 py-2 font-normal">Saved from income</th>
+              <th className="px-3 py-2 font-normal">Debt paid down</th>
+              <th className="px-3 py-2 font-normal">Added to investments</th>
+              <th className="px-3 py-2 font-normal">Kept as cash</th>
               <th className="px-3 py-2 font-normal">Debt interest</th>
               <th className="px-3 py-2 font-normal">Exchange rate</th>
               <th className="px-3 py-2 font-medium text-foreground">End</th>
@@ -784,7 +786,11 @@ function YearByYear({ points, cur }: { points: ProjectionPoint[]; cur: string })
                   <td className="px-3 py-2">{short(points[i]!.netWorth)}</td>
                   <td className="px-3 py-2 text-success">{signed(c.investmentReturns)}</td>
                   <td className="px-3 py-2">{signed(c.assetGrowth + c.cashInterest)}</td>
-                  <td className="px-3 py-2">{signed(c.leftover)}</td>
+                  <td className="px-3 py-2">{signed(c.debtPaid)}</td>
+                  <td className="px-3 py-2">{signed(c.contributions)}</td>
+                  <td className={cn("px-3 py-2", c.keptAsCash < 0 && "text-destructive")}>
+                    {signed(c.keptAsCash)}
+                  </td>
                   <td className="px-3 py-2 text-destructive">{signed(c.debtInterest)}</td>
                   <td className="px-3 py-2">{signed(c.fxRevaluation)}</td>
                   <td className="px-3 py-2 font-semibold">{short(p.netWorth)}</td>
@@ -794,9 +800,10 @@ function YearByYear({ points, cur }: { points: ProjectionPoint[]; cur: string })
           </tbody>
         </table>
         <p className="border-t border-border px-4 py-3 text-left text-xs text-muted-foreground">
-          Each row: Start + every column = End. “Saved from income” is income minus living and
-          family costs; money you put towards debts or investments still counts, because it lowers
-          what you owe or moves into your investments.
+          Each row: Start + every column = End. Your income after living and family costs goes three
+          ways: debt payments (net worth rises because you owe less), money added to investments,
+          and whatever is left, kept as cash. Once a debt is paid off, its monthly payment moves
+          into “Kept as cash”.
         </p>
       </div>
     </details>
