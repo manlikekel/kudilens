@@ -14,7 +14,6 @@ import {
   PieChart,
   Cell,
 } from "recharts";
-import { AlertTriangle, CheckCircle2, Eye } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/hooks/useAuth";
 import { useFinance } from "@/lib/useFinance";
@@ -42,7 +41,9 @@ import {
 } from "@/components/dashboard/Growth";
 import { useRecentTxns, useRecordSnapshot, useSnapshots } from "@/lib/useGrowth";
 import { SafeToSpend } from "@/components/dashboard/SafeToSpend";
+import { InsightsSection } from "@/components/dashboard/InsightsSection";
 import { onboarded } from "@/lib/onboarding";
+import { startTour, tourSeen } from "@/lib/tour";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -112,6 +113,12 @@ function Dashboard() {
   useEffect(() => {
     if (isEmpty && !onboarded()) navigate({ to: "/welcome" });
   }, [isEmpty, navigate]);
+  // first visit with numbers in place: show the tour once
+  useEffect(() => {
+    if (!data || isEmpty || tourSeen()) return;
+    const t = setTimeout(startTour, 900);
+    return () => clearTimeout(t);
+  }, [data, isEmpty]);
 
   if (isLoading) return <p className="text-muted-foreground">Crunching your numbers…</p>;
   if (error) return <p className="text-destructive">Could not load data: {error.message}</p>;
@@ -154,7 +161,10 @@ function Dashboard() {
 
   return (
     <div className="space-y-6 lg:space-y-8">
-      <section className="hero-surface relative overflow-hidden rounded-[28px] p-6 shadow-[0_24px_60px_-30px_oklch(0.2_0.05_200/0.8)] sm:p-8">
+      <section
+        data-tour="hero"
+        className="hero-surface relative overflow-hidden rounded-[28px] p-6 shadow-[0_24px_60px_-30px_oklch(0.2_0.05_200/0.8)] sm:p-8"
+      >
         <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">
             <p className="text-sm text-white/70">
@@ -253,6 +263,8 @@ function Dashboard() {
           className="col-span-2 lg:col-span-1"
         />
       </div>
+
+      <InsightsSection insights={insights} />
 
       {!empty && <SafeToSpend data={data} txns={recentTxns.data ?? []} />}
 
@@ -401,49 +413,6 @@ function Dashboard() {
         startYear={base[0]!.year}
         deficit={s.monthlySurplus < 0}
       />
-
-      <section>
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">What the data says</h2>
-          <Button asChild size="sm" variant="ghost">
-            <Link to="/advisor">Ask the advisor →</Link>
-          </Button>
-        </div>
-        <div className="grid gap-3 md:grid-cols-2">
-          {insights.length === 0 && (
-            <p className="text-sm text-muted-foreground">Add more data to unlock insights.</p>
-          )}
-          {insights.map((ins) => (
-            <article
-              key={ins.id}
-              className={cn(
-                "panel border-l-4 p-4",
-                ins.severity === "critical" && "border-l-destructive",
-                ins.severity === "watch" && "border-l-warning",
-                ins.severity === "good" && "border-l-success",
-              )}
-            >
-              <div className="flex items-start gap-2">
-                {ins.severity === "critical" ? (
-                  <AlertTriangle className="mt-0.5 size-4 shrink-0 text-destructive" />
-                ) : ins.severity === "watch" ? (
-                  <Eye className="mt-0.5 size-4 shrink-0 text-warning" />
-                ) : (
-                  <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-success" />
-                )}
-                <div className="min-w-0">
-                  <h3 className="font-medium">{ins.title}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{ins.detail}</p>
-                  <p className="mt-2 text-sm">
-                    <span className="text-primary">Do this: </span>
-                    {ins.action}
-                  </p>
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
 
       <div className="grid gap-4 md:grid-cols-2">
         <Donut title="Where each month's income goes" data={spend} cur={cur} />

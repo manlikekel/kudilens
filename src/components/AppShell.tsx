@@ -9,6 +9,7 @@ import {
   FileDown,
   FileText,
   Home,
+  LifeBuoy,
   Lightbulb,
   LogOut,
   MessageCircle,
@@ -29,6 +30,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { cn } from "@/lib/utils";
 import { useFinance } from "@/lib/useFinance";
 import { useInstall } from "@/lib/pwa";
+import { Tour } from "@/components/Tour";
 import { usePrivacy } from "@/lib/privacy";
 import { useAppLock } from "@/lib/applock";
 import { LockScreen, SecondStepScreen, useNeedsSecondStep } from "@/components/Security";
@@ -63,6 +65,8 @@ function RateBar({ userId }: { userId: string }) {
 interface NavItem {
   to: string;
   label: string;
+  /** shorter label for the phone tab bar */
+  short?: string;
   icon: LucideIcon;
 }
 
@@ -70,7 +74,7 @@ const groups: { label: string; items: NavItem[] }[] = [
   {
     label: "Overview",
     items: [
-      { to: "/", label: "Dashboard", icon: Home },
+      { to: "/", label: "Dashboard", short: "Home", icon: Home },
       { to: "/plan", label: "Plan", icon: Compass },
       { to: "/invest", label: "Invest", icon: TrendingUp },
       { to: "/spending", label: "Spending", icon: Receipt },
@@ -91,6 +95,7 @@ const groups: { label: string; items: NavItem[] }[] = [
     items: [
       { to: "/records", label: "My numbers", icon: Table2 },
       { to: "/settings", label: "Settings", icon: Settings },
+      { to: "/guide", label: "How KudiLens works", short: "Guide", icon: LifeBuoy },
     ],
   },
 ];
@@ -155,9 +160,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   if (locked && lockConfig) return <LockScreen config={lockConfig} onSignOut={signOut} />;
 
   return (
-    <div className="min-h-dvh lg:pl-[264px]">
+    <div className="min-h-dvh lg:pl-[292px]">
       {/* ---------- desktop sidebar ---------- */}
-      <aside className="glass fixed inset-y-0 left-0 z-30 hidden w-[264px] flex-col border-r border-border/70 px-4 py-5 lg:flex print:hidden">
+      <aside className="glass-nav fixed top-3.5 bottom-3.5 left-3.5 z-30 hidden w-[264px] flex-col rounded-[28px] px-4 py-5 lg:flex print:hidden">
         <Logo className="px-2" />
         <nav className="mt-8 flex-1 space-y-6 overflow-y-auto no-scrollbar">
           {groups.map((g) => (
@@ -176,6 +181,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
         <button
+          data-tour="privacy"
           onClick={() => setHidden(!hidden)}
           aria-pressed={hidden}
           className="mb-2 flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
@@ -217,13 +223,14 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       {/* ---------- phone / tablet top bar ---------- */}
-      <header className="glass sticky top-0 z-30 border-b border-border/60 pt-safe lg:hidden print:hidden">
-        <div className="flex h-14 items-center justify-between gap-3 px-safe">
+      <header className="sticky top-0 z-30 px-3 pt-[max(0.5rem,env(safe-area-inset-top))] lg:hidden print:hidden">
+        <div className="glass-nav flex h-14 items-center justify-between gap-3 rounded-[22px] pr-2 pl-3">
           <Logo />
           <div className="flex items-center gap-1">
             <Button
               variant="ghost"
               size="icon"
+              data-tour="privacy"
               onClick={() => setHidden(!hidden)}
               aria-pressed={hidden}
               aria-label={hidden ? "Show amounts" : "Hide amounts"}
@@ -246,7 +253,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-safe pt-4 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:px-6 lg:px-10 lg:pt-8 lg:pb-12">
+      <main className="mx-auto max-w-6xl px-safe pt-4 pb-[calc(7rem+env(safe-area-inset-bottom))] sm:px-6 lg:px-10 lg:pt-8 lg:pb-12">
         <RateBar userId={user.id} />
         {current && (
           <p className="mt-1 text-xs font-medium uppercase tracking-[0.14em] text-primary lg:hidden print:hidden">
@@ -261,9 +268,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* ---------- phone / tablet bottom tabs ---------- */}
       <nav
         aria-label="Main"
-        className="glass fixed inset-x-0 bottom-0 z-30 border-t border-border/60 pb-safe lg:hidden print:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden print:hidden"
       >
-        <ul className="mx-auto grid max-w-xl grid-cols-5 px-2">
+        <ul className="glass-nav mx-auto grid max-w-md grid-cols-5 gap-1 rounded-[28px] p-1.5">
           {tabItems.map((item) => (
             <li key={item.to}>
               <TabLink item={item} active={pathname === item.to} />
@@ -271,10 +278,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           ))}
           <li>
             <button
+              data-tour="nav-more"
               onClick={() => setMoreOpen(true)}
               className={cn(
-                "flex h-16 w-full flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground transition-colors",
-                moreItems.some((i) => i.to === pathname) && "text-primary",
+                "flex h-14 w-full flex-col items-center justify-center gap-0.5 rounded-[22px] text-[11px] font-medium text-muted-foreground transition-colors active:scale-95",
+                moreItems.some((i) => i.to === pathname) && "bg-primary/14 text-primary",
               )}
             >
               <MoreHorizontal className="size-[22px]" />
@@ -344,14 +352,18 @@ export function AppShell({ children }: { children: ReactNode }) {
       </Sheet>
 
       <InstallBanner mode={installMode} onInstall={onInstall} />
+      <Tour />
     </div>
   );
 }
+
+const tourKey = (to: string) => `nav-${to.replace("/", "") || "home"}`;
 
 function SideLink({ item, active }: { item: NavItem; active: boolean }) {
   return (
     <Link
       to={item.to}
+      data-tour={tourKey(item.to)}
       className={cn(
         "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
         active && "bg-primary/12 text-foreground",
@@ -368,20 +380,14 @@ function TabLink({ item, active }: { item: NavItem; active: boolean }) {
   return (
     <Link
       to={item.to}
+      data-tour={tourKey(item.to)}
       className={cn(
-        "relative flex h-16 flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground transition-colors",
-        active && "text-primary",
+        "relative flex h-14 flex-col items-center justify-center gap-0.5 rounded-[22px] text-[11px] font-medium text-muted-foreground transition-[background-color,color,transform] duration-200 active:scale-95",
+        active && "bg-primary/14 text-primary",
       )}
     >
-      <span
-        className={cn(
-          "grid h-7 w-12 place-items-center rounded-full transition-colors",
-          active && "bg-primary/15",
-        )}
-      >
-        <item.icon className="size-[20px]" />
-      </span>
-      {item.label}
+      <item.icon className={cn("size-[21px] transition-transform", active && "scale-110")} />
+      <span className="max-w-full truncate px-1">{item.short ?? item.label}</span>
     </Link>
   );
 }
@@ -415,7 +421,7 @@ function InstallBanner({
     }
   };
   return (
-    <div className="fixed inset-x-3 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-40 mx-auto max-w-md animate-rise lg:hidden print:hidden">
+    <div className="fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-40 mx-auto max-w-md animate-rise lg:hidden print:hidden">
       <div className="panel flex items-center gap-3 p-3 pr-2">
         <img src="/icons/icon.svg" alt="" className="size-10 rounded-xl" />
         <div className="min-w-0 flex-1">

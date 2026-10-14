@@ -362,3 +362,32 @@ describe("what-if scenarios", () => {
     expect(raise[3]!.netWorth - base[3]!.netWorth).toBe(2_400_000);
   });
 });
+
+import { summarizeInsights } from "./insightSummary";
+
+describe("insights summary", () => {
+  const ins = (id: string, severity: "critical" | "watch" | "good", title: string) => ({
+    id,
+    severity,
+    title,
+    detail: "",
+    action: `Do ${id}`,
+  });
+  it("leads with what needs fixing and lists actions in order", () => {
+    const s = summarizeInsights([
+      ins("w", "watch", "Low savings"),
+      ins("c", "critical", "Debt payments take 67% of income"),
+      ins("g", "good", "Emergency fund covers 6 months"),
+    ]);
+    expect(s.tone).toBe("critical");
+    expect(s.headline).toBe(
+      "1 thing needs your attention now. The biggest: debt payments take 67% of income.",
+    );
+    expect(s.nextSteps).toEqual(["Do c", "Do w"]);
+    expect(s.goingWell).toBe("Emergency fund covers 6 months");
+  });
+  it("is reassuring when nothing is wrong", () => {
+    expect(summarizeInsights([ins("g", "good", "All good")]).headline).toMatch(/good shape/);
+    expect(summarizeInsights([]).tone).toBe("empty");
+  });
+});

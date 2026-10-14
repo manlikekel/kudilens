@@ -96,6 +96,10 @@
   --chart-4: oklch(0.68 0.18 22);
   --chart-5: oklch(0.74 0.12 305);
   --glass: oklch(0.2 0.024 262 / 0.72);
+  --glass-nav: oklch(0.21 0.024 262 / 0.58);
+  --glass-edge: oklch(1 0 0 / 0.1);
+  --glass-highlight: oklch(1 0 0 / 0.07);
+  --glass-shadow: 0 10px 36px -12px oklch(0 0 0 / 0.6);
   --card-edge: oklch(1 0 0 / 0.07);
   --card-shadow: 0 1px 0 oklch(1 0 0 / 0.04) inset, 0 12px 32px -16px oklch(0 0 0 / 0.6);
   --canvas-glow:
@@ -138,6 +142,10 @@
   --chart-4: oklch(0.6 0.19 25);
   --chart-5: oklch(0.58 0.14 305);
   --glass: oklch(1 0 0 / 0.78);
+  --glass-nav: oklch(1 0 0 / 0.66);
+  --glass-edge: oklch(0.2 0.025 262 / 0.09);
+  --glass-highlight: oklch(1 0 0 / 0.75);
+  --glass-shadow: 0 10px 32px -14px oklch(0.2 0.03 262 / 0.28);
   --card-edge: oklch(0.2 0.025 262 / 0.04);
   --card-shadow: 0 1px 2px oklch(0.2 0.03 262 / 0.05), 0 12px 32px -18px oklch(0.2 0.03 262 / 0.18);
   --canvas-glow:
@@ -181,6 +189,10 @@
     --chart-4: oklch(0.6 0.19 25);
     --chart-5: oklch(0.58 0.14 305);
     --glass: oklch(1 0 0 / 0.78);
+    --glass-nav: oklch(1 0 0 / 0.66);
+    --glass-edge: oklch(0.2 0.025 262 / 0.09);
+    --glass-highlight: oklch(1 0 0 / 0.75);
+    --glass-shadow: 0 10px 32px -14px oklch(0.2 0.03 262 / 0.28);
     --card-edge: oklch(0.2 0.025 262 / 0.04);
     --card-shadow: 0 1px 2px oklch(0.2 0.03 262 / 0.05), 0 12px 32px -18px oklch(0.2 0.03 262 / 0.18);
     --canvas-glow:
@@ -261,6 +273,17 @@
   background-color: var(--glass);
   -webkit-backdrop-filter: saturate(180%) blur(18px);
   backdrop-filter: saturate(180%) blur(18px);
+}
+
+/* floating, frosted navigation (Telegram-style): translucent, blurred, hairline edge, soft shadow */
+@utility glass-nav {
+  background-color: var(--glass-nav);
+  -webkit-backdrop-filter: saturate(190%) blur(26px);
+  backdrop-filter: saturate(190%) blur(26px);
+  border: 1px solid var(--glass-edge);
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    var(--glass-shadow);
 }
 
 @utility hero-surface {

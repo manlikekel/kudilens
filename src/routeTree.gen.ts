@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdvisorRouteImport } from './routes/advisor'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as GuideRouteImport } from './routes/guide'
 import { Route as IdeasRouteImport } from './routes/ideas'
 import { Route as InsightsRouteImport } from './routes/insights'
 import { Route as InvestRouteImport } from './routes/invest'
@@ -51,6 +52,11 @@ const AdvisorRoute = AdvisorRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuideRoute = GuideRouteImport.update({
+  id: '/guide',
+  path: '/guide',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IdeasRoute = IdeasRouteImport.update({
@@ -184,6 +190,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/advisor': typeof AdvisorRoute
   '/auth': typeof AuthRoute
+  '/guide': typeof GuideRoute
   '/ideas': typeof IdeasRoute
   '/insights': typeof InsightsRoute
   '/invest': typeof InvestRoute
@@ -214,6 +221,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/advisor': typeof AdvisorRoute
   '/auth': typeof AuthRoute
+  '/guide': typeof GuideRoute
   '/ideas': typeof IdeasRoute
   '/insights': typeof InsightsRoute
   '/invest': typeof InvestRoute
@@ -245,6 +253,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/advisor': typeof AdvisorRoute
   '/auth': typeof AuthRoute
+  '/guide': typeof GuideRoute
   '/ideas': typeof IdeasRoute
   '/insights': typeof InsightsRoute
   '/invest': typeof InvestRoute
@@ -277,6 +286,7 @@ export interface FileRouteTypes {
     | '/'
     | '/advisor'
     | '/auth'
+    | '/guide'
     | '/ideas'
     | '/insights'
     | '/invest'
@@ -307,6 +317,7 @@ export interface FileRouteTypes {
     | '/'
     | '/advisor'
     | '/auth'
+    | '/guide'
     | '/ideas'
     | '/insights'
     | '/invest'
@@ -337,6 +348,7 @@ export interface FileRouteTypes {
     | '/'
     | '/advisor'
     | '/auth'
+    | '/guide'
     | '/ideas'
     | '/insights'
     | '/invest'
@@ -368,6 +380,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdvisorRoute: typeof AdvisorRoute
   AuthRoute: typeof AuthRoute
+  GuideRoute: typeof GuideRoute
   IdeasRoute: typeof IdeasRoute
   InsightsRoute: typeof InsightsRoute
   InvestRoute: typeof InvestRoute
@@ -416,6 +429,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guide': {
+      id: '/guide'
+      path: '/guide'
+      fullPath: '/guide'
+      preLoaderRoute: typeof GuideRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ideas': {
@@ -600,6 +620,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdvisorRoute: AdvisorRoute,
   AuthRoute: AuthRoute,
+  GuideRoute: GuideRoute,
   IdeasRoute: IdeasRoute,
   InsightsRoute: InsightsRoute,
   InvestRoute: InvestRoute,

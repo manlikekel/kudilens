@@ -24,7 +24,7 @@ export function SafeToSpend({ data, txns }: { data: FinanceData; txns: RecentTxn
   ];
 
   return (
-    <section className="panel p-5">
+    <section className="panel p-5" data-tour="safe-to-spend">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
