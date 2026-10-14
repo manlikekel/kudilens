@@ -36,6 +36,7 @@ import { Route as ApiNgFundsRouteImport } from './routes/api/ng-funds'
 import { Route as ApiReviewRouteImport } from './routes/api/review'
 import { Route as ApiStatementsRouteImport } from './routes/api/statements'
 import { Route as ApiPublicHooksRefreshFxRouteImport } from './routes/api/public/hooks/refresh-fx'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -172,6 +173,12 @@ const ApiPublicHooksRefreshFxRoute = ApiPublicHooksRefreshFxRouteImport.update({
   path: '/api/public/hooks/refresh-fx',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -201,6 +208,7 @@ export interface FileRoutesByFullPath {
   '/api/review': typeof ApiReviewRoute
   '/api/statements': typeof ApiStatementsRoute
   '/api/public/hooks/refresh-fx': typeof ApiPublicHooksRefreshFxRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -230,6 +238,7 @@ export interface FileRoutesByTo {
   '/api/review': typeof ApiReviewRoute
   '/api/statements': typeof ApiStatementsRoute
   '/api/public/hooks/refresh-fx': typeof ApiPublicHooksRefreshFxRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -260,6 +269,7 @@ export interface FileRoutesById {
   '/api/review': typeof ApiReviewRoute
   '/api/statements': typeof ApiStatementsRoute
   '/api/public/hooks/refresh-fx': typeof ApiPublicHooksRefreshFxRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -291,6 +301,7 @@ export interface FileRouteTypes {
     | '/api/review'
     | '/api/statements'
     | '/api/public/hooks/refresh-fx'
+    | '/lovable/email/transactional/preview'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -320,6 +331,7 @@ export interface FileRouteTypes {
     | '/api/review'
     | '/api/statements'
     | '/api/public/hooks/refresh-fx'
+    | '/lovable/email/transactional/preview'
   id:
     | '__root__'
     | '/'
@@ -349,6 +361,7 @@ export interface FileRouteTypes {
     | '/api/review'
     | '/api/statements'
     | '/api/public/hooks/refresh-fx'
+    | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -379,6 +392,7 @@ export interface RootRouteChildren {
   ApiReviewRoute: typeof ApiReviewRoute
   ApiStatementsRoute: typeof ApiStatementsRoute
   ApiPublicHooksRefreshFxRoute: typeof ApiPublicHooksRefreshFxRoute
+  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -572,6 +586,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksRefreshFxRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -603,6 +624,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiReviewRoute: ApiReviewRoute,
   ApiStatementsRoute: ApiStatementsRoute,
   ApiPublicHooksRefreshFxRoute: ApiPublicHooksRefreshFxRoute,
+  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
