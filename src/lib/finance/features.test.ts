@@ -101,3 +101,54 @@ describe("debt-free countdown", () => {
     expect(debtFreePlan(withDebts([]), today).months).toBe(0);
   });
 });
+
+import { simulatePath } from "./engine";
+
+describe("real spending in the projection", () => {
+  const data: FinanceData = {
+    profile: {
+      id: "u",
+      full_name: null,
+      age: 30,
+      retirement_age: 60,
+      base_currency: "NGN",
+      inflation_rate: 0,
+      risk_tolerance: "balanced",
+      goals: null,
+      salary_growth: 0,
+      cash_yield_ratio: 0,
+    },
+    debts: [],
+    investments: [],
+    flows: [
+      {
+        id: "i",
+        label: "Salary",
+        flow_type: "income",
+        category: "Salary",
+        monthly_amount: 1_000_000,
+        currency: "NGN",
+        growth_rate: 0,
+      },
+      {
+        id: "e",
+        label: "Living",
+        flow_type: "expense",
+        category: "Living",
+        monthly_amount: 400_000,
+        currency: "NGN",
+        growth_rate: 0,
+      },
+    ],
+    family: [],
+    actualSpend: { avgMonthly: 700_000, months: 3 },
+  };
+  it("uses typed costs by default and real spending when asked", () => {
+    expect(simulatePath(data, 1, null)[1]!.cash).toBe(600_000 * 12);
+    expect(simulatePath(data, 1, null, { actualSpending: true })[1]!.cash).toBe(300_000 * 12);
+  });
+  it("ignores the switch when there are no statements", () => {
+    const none = { ...data, actualSpend: { avgMonthly: 0, months: 0 } };
+    expect(simulatePath(none, 1, null, { actualSpending: true })[1]!.cash).toBe(600_000 * 12);
+  });
+});

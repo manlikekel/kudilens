@@ -238,7 +238,7 @@ function Dashboard() {
           <h2 className="text-lg font-semibold">25-year net worth projection (expected case)</h2>
           <p className="text-xs text-muted-foreground">Tap or hover the chart to see any year</p>
         </div>
-        <ProjectionControls opts={opts} onChange={setOpts} />
+        <ProjectionControls opts={opts} onChange={setOpts} actual={data.actualSpend} cur={cur} />
         <div className="mt-4 h-72">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={chart} margin={{ left: 8, right: 8 }}>
@@ -669,13 +669,19 @@ function Donut({
 }
 
 const OPTS_KEY = "kudi-projection";
-type ProjectionOptions = { interest: InterestMode; protectInvestments: boolean };
+type ProjectionOptions = {
+  interest: InterestMode;
+  protectInvestments: boolean;
+  /** use real spending from imported statements for living costs, when there is any */
+  actualSpending: boolean;
+};
 
 /** Projection settings, remembered on this device. */
 function useProjectionOptions(): [ProjectionOptions, (o: ProjectionOptions) => void] {
   const [opts, setOpts] = useState<ProjectionOptions>({
     interest: "compound",
     protectInvestments: true,
+    actualSpending: true,
   });
   useEffect(() => {
     try {
@@ -686,6 +692,7 @@ function useProjectionOptions(): [ProjectionOptions, (o: ProjectionOptions) => v
         setOpts({
           interest: saved.interest === "simple" ? "simple" : "compound",
           protectInvestments: saved.protectInvestments !== false,
+          actualSpending: saved.actualSpending !== false,
         });
     } catch {
       /* use defaults */
@@ -705,12 +712,17 @@ function useProjectionOptions(): [ProjectionOptions, (o: ProjectionOptions) => v
 function ProjectionControls({
   opts,
   onChange,
+  actual,
+  cur,
 }: {
   opts: ProjectionOptions;
   onChange: (o: ProjectionOptions) => void;
+  /** real average monthly spending from statements, if any */
+  actual: { avgMonthly: number; months: number } | undefined;
+  cur: string;
 }) {
   return (
-    <div className="mt-4 flex flex-col gap-3 rounded-xl border border-border bg-secondary/40 p-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="mt-4 grid gap-3 rounded-xl border border-border bg-secondary/40 p-3 lg:grid-cols-[auto_1fr_1fr] lg:items-center">
       <div className="flex items-center gap-2">
         <span className="text-sm text-muted-foreground">Investment growth</span>
         <div
@@ -734,7 +746,7 @@ function ProjectionControls({
           ))}
         </div>
       </div>
-      <label className="flex cursor-pointer items-center justify-between gap-3 text-sm sm:justify-start">
+      <label className="flex cursor-pointer items-center justify-between gap-3 text-sm">
         <span>
           <span className="font-medium">Keep investments separate</span>
           <span className="block text-xs text-muted-foreground">
@@ -746,6 +758,22 @@ function ProjectionControls({
           onCheckedChange={(v) => onChange({ ...opts, protectInvestments: v })}
         />
       </label>
+      {actual && actual.months > 0 && (
+        <label className="flex cursor-pointer items-center justify-between gap-3 text-sm">
+          <span>
+            <span className="font-medium">Use my real spending</span>
+            <span className="block text-xs text-muted-foreground">
+              {formatMoney(actual.avgMonthly, "NGN")}/month average from your last {actual.months}{" "}
+              month{actual.months === 1 ? "" : "s"} of statements
+              {cur !== "NGN" ? " (in Naira)" : ""}, instead of the costs typed in My numbers.
+            </span>
+          </span>
+          <Switch
+            checked={opts.actualSpending}
+            onCheckedChange={(v) => onChange({ ...opts, actualSpending: v })}
+          />
+        </label>
+      )}
     </div>
   );
 }

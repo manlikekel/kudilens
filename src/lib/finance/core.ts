@@ -113,6 +113,8 @@ export interface LumpCost {
   currency: string;
   /** 1-12 calendar months in which this cost is due each year */
   months: number[];
+  /** sinking fund: how much is already set aside for the next payment */
+  saved?: number;
 }
 
 export interface FinanceData {

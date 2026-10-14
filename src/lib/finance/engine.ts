@@ -49,6 +49,11 @@ export interface EngineOptions {
    * liquid pots, then the rest.
    */
   protectInvestments?: boolean;
+  /**
+   * true: living and family costs use the user's actual average monthly spending from imported
+   * statements (when there is any) instead of the amounts typed in My numbers.
+   */
+  actualSpending?: boolean;
 }
 
 export type InterestMode = "compound" | "simple";
@@ -72,7 +77,11 @@ export function simulatePath(
   const fxNow = (cur: string) => toNGN(1, cur, a); // NGN per unit today
 
   const income0 = base(s.monthlyIncome) * 12;
-  const expenses0 = base(s.monthlyExpenses + s.familyCost) * 12;
+  const useActual = !!opts.actualSpending && (data.actualSpend?.months ?? 0) > 0;
+  // actualSpend is already in Naira and excludes transfers, savings and debt repayments
+  const expenses0 = useActual
+    ? data.actualSpend!.avgMonthly * 12
+    : base(s.monthlyExpenses + s.familyCost) * 12;
   const extra = (opts.extraMonthly ?? 0) * 12;
 
   const pots = data.investments.map((i) => ({
@@ -239,7 +248,7 @@ export function project(
   data: FinanceData,
   years = 25,
   extraMonthly = 0,
-  opts: Pick<EngineOptions, "interest" | "protectInvestments"> = {},
+  opts: Pick<EngineOptions, "interest" | "protectInvestments" | "actualSpending"> = {},
 ): ProjectionPoint[] {
   const a = getAssumptions(data);
   const base = data.profile?.base_currency ?? "NGN";
