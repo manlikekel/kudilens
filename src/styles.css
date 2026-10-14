@@ -300,3 +300,36 @@
     transform: translateX(6px);
   }
 }
+
+/* printing / "Save as PDF": white A4 page, no app chrome */
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+  :root,
+  :root[data-theme] {
+    color-scheme: light;
+    --background: #fff;
+    --foreground: #141b2b;
+    --card: #fff;
+    --muted-foreground: #5c667a;
+    --border: #dfe3ea;
+    --primary: #12946c;
+    --success: #12946c;
+    --destructive: #c4372f;
+    --chart-1: #12946c;
+  }
+  body {
+    background: #fff !important;
+    background-image: none !important;
+  }
+  main {
+    padding: 0 !important;
+    max-width: none !important;
+  }
+  .report section,
+  .report header {
+    break-inside: avoid;
+  }
+}

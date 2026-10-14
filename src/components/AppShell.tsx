@@ -6,6 +6,7 @@ import {
   Download,
   Eye,
   EyeOff,
+  FileDown,
   FileText,
   Home,
   Lightbulb,
@@ -82,6 +83,7 @@ const groups: { label: string; items: NavItem[] }[] = [
       { to: "/advisor", label: "Ask Kudi", icon: MessageCircle },
       { to: "/ideas", label: "My Ideas", icon: Lightbulb },
       { to: "/review", label: "Review", icon: FileText },
+      { to: "/report", label: "Monthly report", icon: FileDown },
     ],
   },
   {
@@ -247,7 +249,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main className="mx-auto max-w-6xl px-safe pt-4 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:px-6 lg:px-10 lg:pt-8 lg:pb-12">
         <RateBar userId={user.id} />
         {current && (
-          <p className="mt-1 text-xs font-medium uppercase tracking-[0.14em] text-primary lg:hidden">
+          <p className="mt-1 text-xs font-medium uppercase tracking-[0.14em] text-primary lg:hidden print:hidden">
             {current.label}
           </p>
         )}

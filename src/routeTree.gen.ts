@@ -18,6 +18,7 @@ import { Route as InvestRouteImport } from './routes/invest'
 import { Route as PlanRouteImport } from './routes/plan'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RecordsRouteImport } from './routes/records'
+import { Route as ReportRouteImport } from './routes/report'
 import { Route as ReviewRouteImport } from './routes/review'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SpendingRouteImport } from './routes/spending'
@@ -78,6 +79,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const RecordsRoute = RecordsRouteImport.update({
   id: '/records',
   path: '/records',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportRoute = ReportRouteImport.update({
+  id: '/report',
+  path: '/report',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReviewRoute = ReviewRouteImport.update({
@@ -171,6 +177,7 @@ export interface FileRoutesByFullPath {
   '/plan': typeof PlanRoute
   '/privacy': typeof PrivacyRoute
   '/records': typeof RecordsRoute
+  '/report': typeof ReportRoute
   '/review': typeof ReviewRoute
   '/settings': typeof SettingsRoute
   '/spending': typeof SpendingRoute
@@ -198,6 +205,7 @@ export interface FileRoutesByTo {
   '/plan': typeof PlanRoute
   '/privacy': typeof PrivacyRoute
   '/records': typeof RecordsRoute
+  '/report': typeof ReportRoute
   '/review': typeof ReviewRoute
   '/settings': typeof SettingsRoute
   '/spending': typeof SpendingRoute
@@ -226,6 +234,7 @@ export interface FileRoutesById {
   '/plan': typeof PlanRoute
   '/privacy': typeof PrivacyRoute
   '/records': typeof RecordsRoute
+  '/report': typeof ReportRoute
   '/review': typeof ReviewRoute
   '/settings': typeof SettingsRoute
   '/spending': typeof SpendingRoute
@@ -255,6 +264,7 @@ export interface FileRouteTypes {
     | '/plan'
     | '/privacy'
     | '/records'
+    | '/report'
     | '/review'
     | '/settings'
     | '/spending'
@@ -282,6 +292,7 @@ export interface FileRouteTypes {
     | '/plan'
     | '/privacy'
     | '/records'
+    | '/report'
     | '/review'
     | '/settings'
     | '/spending'
@@ -309,6 +320,7 @@ export interface FileRouteTypes {
     | '/plan'
     | '/privacy'
     | '/records'
+    | '/report'
     | '/review'
     | '/settings'
     | '/spending'
@@ -337,6 +349,7 @@ export interface RootRouteChildren {
   PlanRoute: typeof PlanRoute
   PrivacyRoute: typeof PrivacyRoute
   RecordsRoute: typeof RecordsRoute
+  ReportRoute: typeof ReportRoute
   ReviewRoute: typeof ReviewRoute
   SettingsRoute: typeof SettingsRoute
   SpendingRoute: typeof SpendingRoute
@@ -418,6 +431,13 @@ declare module '@tanstack/react-router' {
       path: '/records'
       fullPath: '/records'
       preLoaderRoute: typeof RecordsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/report': {
+      id: '/report'
+      path: '/report'
+      fullPath: '/report'
+      preLoaderRoute: typeof ReportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/review': {
@@ -545,6 +565,7 @@ const rootRouteChildren: RootRouteChildren = {
   PlanRoute: PlanRoute,
   PrivacyRoute: PrivacyRoute,
   RecordsRoute: RecordsRoute,
+  ReportRoute: ReportRoute,
   ReviewRoute: ReviewRoute,
   SettingsRoute: SettingsRoute,
   SpendingRoute: SpendingRoute,
