@@ -40,7 +40,8 @@ import {
   NeedsDatabaseUpdate,
   NetWorthHistory,
 } from "@/components/dashboard/Growth";
-import { useRecordSnapshot, useSnapshots } from "@/lib/useGrowth";
+import { useRecentTxns, useRecordSnapshot, useSnapshots } from "@/lib/useGrowth";
+import { SafeToSpend } from "@/components/dashboard/SafeToSpend";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -86,6 +87,7 @@ function Dashboard() {
   const { data, isLoading, error } = useFinance(user?.id);
   const snapshots = useSnapshots(user?.id);
   useRecordSnapshot(user?.id, data);
+  const recentTxns = useRecentTxns(user?.id);
   const [extra, setExtra] = useState(0);
   const [opts, setOpts] = useProjectionOptions();
 
@@ -241,6 +243,8 @@ function Dashboard() {
           className="col-span-2 lg:col-span-1"
         />
       </div>
+
+      {!empty && <SafeToSpend data={data} txns={recentTxns.data ?? []} />}
 
       <DebtCountdown data={data} />
 

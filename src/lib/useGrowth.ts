@@ -146,3 +146,27 @@ export function useDeleteScenario(userId: string | undefined) {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["scenarios", userId] }),
   });
 }
+
+export interface RecentTxn {
+  txn_date: string;
+  amount_minor: number;
+  category: string;
+  currency: string;
+  merchant: string;
+}
+
+/** The last ~4 months of transactions: enough for this month's spending and recurring bills. */
+export function useRecentTxns(userId: string | undefined) {
+  return useQuery({
+    queryKey: ["recent-txns", userId],
+    enabled: !!userId,
+    queryFn: () =>
+      rows<RecentTxn>(
+        supabase
+          .from("transactions")
+          .select("txn_date, amount_minor, category, currency, merchant")
+          .eq("user_id", userId!)
+          .gte("txn_date", new Date(Date.now() - 125 * 86_400_000).toISOString().slice(0, 10)),
+      ),
+  });
+}
