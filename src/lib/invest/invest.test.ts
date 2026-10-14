@@ -241,3 +241,30 @@ describe("SEC weekly report parser", () => {
     expect(usd).toMatchObject({ price: 1.72, priceCurrency: "USD", yieldYtd: 0.038 });
   });
 });
+
+import { goalPlan } from "./goalplan";
+
+describe("goal plans", () => {
+  it("matches the product to how soon the money is needed", () => {
+    expect(goalPlan({ currency: "NGN" }, 6, "NG").savedIn).toBe("money market");
+    expect(goalPlan({ currency: "NGN" }, 24, "NG").savedIn).toBe("t-bills");
+    expect(goalPlan({ currency: "NGN" }, 48, "NG").vehicle).toMatch(/Balanced/);
+    expect(goalPlan({ currency: "NGN" }, 120, "NG").savedIn).toBe("stocks");
+  });
+  it("keeps foreign-currency goals in that currency for Nigerians", () => {
+    const p = goalPlan({ currency: "CAD", saved_in: "money market" }, 36, "NG");
+    expect(p.savedIn).toBe("usd eurobond");
+    expect(p.warning).toMatch(/Naira/);
+    expect(p.platforms.length).toBeGreaterThan(0);
+  });
+  it("warns when a long goal sits in cash or a short one in stocks", () => {
+    expect(goalPlan({ currency: "USD", saved_in: "savings account" }, 120, "US").warning).toMatch(
+      /inflation/,
+    );
+    expect(goalPlan({ currency: "GBP", saved_in: "stocks" }, 6, "GB").warning).toMatch(/safer/);
+  });
+  it("only suggests platforms with confirmed licences", () => {
+    for (const months of [6, 24, 48, 120])
+      expect(goalPlan({ currency: "NGN" }, months, "NG").platforms).not.toContain("Ladda");
+  });
+});
