@@ -23,6 +23,7 @@ import { Route as ReportRouteImport } from './routes/report'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ReviewRouteImport } from './routes/review'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ShareTargetRouteImport } from './routes/share-target'
 import { Route as SpendingRouteImport } from './routes/spending'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as WelcomeRouteImport } from './routes/welcome'
@@ -36,6 +37,7 @@ import { Route as ApiMarketRouteImport } from './routes/api/market'
 import { Route as ApiNgFundsRouteImport } from './routes/api/ng-funds'
 import { Route as ApiReviewRouteImport } from './routes/api/review'
 import { Route as ApiStatementsRouteImport } from './routes/api/statements'
+import { Route as ApiWidgetMarketRouteImport } from './routes/api/widget-market'
 import { Route as ApiPublicHooksRefreshFxRouteImport } from './routes/api/public/hooks/refresh-fx'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 
@@ -109,6 +111,11 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShareTargetRoute = ShareTargetRouteImport.update({
+  id: '/share-target',
+  path: '/share-target',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SpendingRoute = SpendingRouteImport.update({
   id: '/spending',
   path: '/spending',
@@ -174,6 +181,11 @@ const ApiStatementsRoute = ApiStatementsRouteImport.update({
   path: '/api/statements',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiWidgetMarketRoute = ApiWidgetMarketRouteImport.update({
+  id: '/api/widget-market',
+  path: '/api/widget-market',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksRefreshFxRoute = ApiPublicHooksRefreshFxRouteImport.update({
   id: '/api/public/hooks/refresh-fx',
   path: '/api/public/hooks/refresh-fx',
@@ -201,6 +213,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/review': typeof ReviewRoute
   '/settings': typeof SettingsRoute
+  '/share-target': typeof ShareTargetRoute
   '/spending': typeof SpendingRoute
   '/terms': typeof TermsRoute
   '/welcome': typeof WelcomeRoute
@@ -214,6 +227,7 @@ export interface FileRoutesByFullPath {
   '/api/ng-funds': typeof ApiNgFundsRoute
   '/api/review': typeof ApiReviewRoute
   '/api/statements': typeof ApiStatementsRoute
+  '/api/widget-market': typeof ApiWidgetMarketRoute
   '/api/public/hooks/refresh-fx': typeof ApiPublicHooksRefreshFxRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -232,6 +246,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/review': typeof ReviewRoute
   '/settings': typeof SettingsRoute
+  '/share-target': typeof ShareTargetRoute
   '/spending': typeof SpendingRoute
   '/terms': typeof TermsRoute
   '/welcome': typeof WelcomeRoute
@@ -245,6 +260,7 @@ export interface FileRoutesByTo {
   '/api/ng-funds': typeof ApiNgFundsRoute
   '/api/review': typeof ApiReviewRoute
   '/api/statements': typeof ApiStatementsRoute
+  '/api/widget-market': typeof ApiWidgetMarketRoute
   '/api/public/hooks/refresh-fx': typeof ApiPublicHooksRefreshFxRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -264,6 +280,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/review': typeof ReviewRoute
   '/settings': typeof SettingsRoute
+  '/share-target': typeof ShareTargetRoute
   '/spending': typeof SpendingRoute
   '/terms': typeof TermsRoute
   '/welcome': typeof WelcomeRoute
@@ -277,6 +294,7 @@ export interface FileRoutesById {
   '/api/ng-funds': typeof ApiNgFundsRoute
   '/api/review': typeof ApiReviewRoute
   '/api/statements': typeof ApiStatementsRoute
+  '/api/widget-market': typeof ApiWidgetMarketRoute
   '/api/public/hooks/refresh-fx': typeof ApiPublicHooksRefreshFxRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -297,6 +315,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/review'
     | '/settings'
+    | '/share-target'
     | '/spending'
     | '/terms'
     | '/welcome'
@@ -310,6 +329,7 @@ export interface FileRouteTypes {
     | '/api/ng-funds'
     | '/api/review'
     | '/api/statements'
+    | '/api/widget-market'
     | '/api/public/hooks/refresh-fx'
     | '/lovable/email/transactional/preview'
   fileRoutesByTo: FileRoutesByTo
@@ -328,6 +348,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/review'
     | '/settings'
+    | '/share-target'
     | '/spending'
     | '/terms'
     | '/welcome'
@@ -341,6 +362,7 @@ export interface FileRouteTypes {
     | '/api/ng-funds'
     | '/api/review'
     | '/api/statements'
+    | '/api/widget-market'
     | '/api/public/hooks/refresh-fx'
     | '/lovable/email/transactional/preview'
   id:
@@ -359,6 +381,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/review'
     | '/settings'
+    | '/share-target'
     | '/spending'
     | '/terms'
     | '/welcome'
@@ -372,6 +395,7 @@ export interface FileRouteTypes {
     | '/api/ng-funds'
     | '/api/review'
     | '/api/statements'
+    | '/api/widget-market'
     | '/api/public/hooks/refresh-fx'
     | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
@@ -391,6 +415,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   ReviewRoute: typeof ReviewRoute
   SettingsRoute: typeof SettingsRoute
+  ShareTargetRoute: typeof ShareTargetRoute
   SpendingRoute: typeof SpendingRoute
   TermsRoute: typeof TermsRoute
   WelcomeRoute: typeof WelcomeRoute
@@ -404,6 +429,7 @@ export interface RootRouteChildren {
   ApiNgFundsRoute: typeof ApiNgFundsRoute
   ApiReviewRoute: typeof ApiReviewRoute
   ApiStatementsRoute: typeof ApiStatementsRoute
+  ApiWidgetMarketRoute: typeof ApiWidgetMarketRoute
   ApiPublicHooksRefreshFxRoute: typeof ApiPublicHooksRefreshFxRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
@@ -508,6 +534,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/share-target': {
+      id: '/share-target'
+      path: '/share-target'
+      fullPath: '/share-target'
+      preLoaderRoute: typeof ShareTargetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/spending': {
       id: '/spending'
       path: '/spending'
@@ -599,6 +632,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiStatementsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/widget-market': {
+      id: '/api/widget-market'
+      path: '/api/widget-market'
+      fullPath: '/api/widget-market'
+      preLoaderRoute: typeof ApiWidgetMarketRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/refresh-fx': {
       id: '/api/public/hooks/refresh-fx'
       path: '/api/public/hooks/refresh-fx'
@@ -631,6 +671,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   ReviewRoute: ReviewRoute,
   SettingsRoute: SettingsRoute,
+  ShareTargetRoute: ShareTargetRoute,
   SpendingRoute: SpendingRoute,
   TermsRoute: TermsRoute,
   WelcomeRoute: WelcomeRoute,
@@ -644,6 +685,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiNgFundsRoute: ApiNgFundsRoute,
   ApiReviewRoute: ApiReviewRoute,
   ApiStatementsRoute: ApiStatementsRoute,
+  ApiWidgetMarketRoute: ApiWidgetMarketRoute,
   ApiPublicHooksRefreshFxRoute: ApiPublicHooksRefreshFxRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }

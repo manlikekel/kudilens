@@ -22,6 +22,8 @@ export interface MarketAssumptions {
   educationInflation?: LiveValue; // % per year
   /** for context only: last 12 months' Naira move, % (negative = Naira strengthened) */
   fxChange1y?: LiveValue;
+  /** for display: Naira per US dollar today */
+  ngnPerUsd?: LiveValue;
 }
 
 /** Pearson correlation of two equal-length series; null if undefined. */

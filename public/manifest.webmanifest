@@ -50,6 +50,64 @@
       "label": "A plain-English guide to every part of the app"
     }
   ],
+  "share_target": {
+    "action": "/share-target",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "statement",
+          "accept": ["text/csv", ".csv", "text/plain", ".txt", "application/pdf", ".pdf"]
+        }
+      ]
+    }
+  },
+  "widgets": [
+    {
+      "name": "KudiLens: My money",
+      "short_name": "My money",
+      "description": "Safe to spend this month, net worth and your debt-free date. Amounts stay hidden when privacy mode is on.",
+      "tag": "money",
+      "template": "money",
+      "ms_ac_template": "/widgets/money-template.json",
+      "data": "/widgets/money-data.json",
+      "type": "application/json",
+      "auth": false,
+      "update": 3600,
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }],
+      "screenshots": [
+        {
+          "src": "/screenshots/phone-dashboard.jpg",
+          "sizes": "657x1421",
+          "label": "Your money at a glance"
+        }
+      ]
+    },
+    {
+      "name": "KudiLens: Market today",
+      "short_name": "Market today",
+      "description": "Nigerian inflation, the dollar rate and the best money market fund yield, updated daily.",
+      "tag": "market",
+      "template": "market",
+      "ms_ac_template": "/widgets/market-template.json",
+      "data": "/api/widget-market",
+      "type": "application/json",
+      "auth": false,
+      "update": 21600,
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }],
+      "screenshots": [
+        {
+          "src": "/screenshots/phone-funds.jpg",
+          "sizes": "657x1421",
+          "label": "Live fund yields and market figures"
+        }
+      ]
+    }
+  ],
   "shortcuts": [
     { "name": "Plan", "short_name": "Plan", "url": "/plan", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
     { "name": "Spending", "short_name": "Spending", "url": "/spending", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },

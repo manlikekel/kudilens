@@ -44,6 +44,10 @@ import { SafeToSpend } from "@/components/dashboard/SafeToSpend";
 import { InsightsSection } from "@/components/dashboard/InsightsSection";
 import { onboarded } from "@/lib/onboarding";
 import { startTour, tourSeen } from "@/lib/tour";
+import { useWidgetSync } from "@/lib/widgets";
+import type { RecentTxn } from "@/lib/useGrowth";
+
+const EMPTY_TXNS: RecentTxn[] = [];
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -90,6 +94,7 @@ function Dashboard() {
   const snapshots = useSnapshots(user?.id);
   useRecordSnapshot(user?.id, data);
   const recentTxns = useRecentTxns(user?.id);
+  useWidgetSync(data, recentTxns.data ?? EMPTY_TXNS);
   const [extra, setExtra] = useState(0);
   const [opts, setOpts] = useProjectionOptions();
 

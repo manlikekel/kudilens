@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Sparkles, Trash2, Upload } from "lucide-react";
@@ -76,6 +76,32 @@ function SpendingPage() {
   const rules = rulesQ.data ?? [];
   const months = useMemo(() => monthlySpending(txns.filter((t) => t.currency === "NGN")), [txns]);
   const recurring = useMemo(() => detectRecurring(txns), [txns]);
+  const [tab, setTab] = useState<string | null>(null);
+  const [sharedFile, setSharedFile] = useState<File | null>(null);
+
+  // a statement shared to KudiLens from another app (see the share target in sw.js)
+  useEffect(() => {
+    const shared = new URLSearchParams(window.location.search).get("shared");
+    if (!shared) return;
+    window.history.replaceState(null, "", "/spending");
+    setTab("import");
+    if (shared === "retry") {
+      toast.message("Choose the statement once more to import it.");
+      return;
+    }
+    void (async () => {
+      try {
+        const cache = await caches.open("kudilens-share");
+        const res = await cache.match("/__shared/statement");
+        if (!res) return;
+        const name = decodeURIComponent(res.headers.get("X-Filename") ?? "statement.csv");
+        setSharedFile(new File([await res.blob()], name, { type: res.headers.get("Content-Type") ?? "" }));
+        await cache.delete("/__shared/statement");
+      } catch {
+        toast.error("Couldn't open the shared file. Please choose it below.");
+      }
+    })();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -83,7 +109,7 @@ function SpendingPage() {
         <h1 className="font-display text-3xl">Spending</h1>
         <p className="text-sm text-muted-foreground">Import statements from GTBank, Access, Zenith, UBA, First Bank, Kuda, Moniepoint, Opay or any bank's CSV/PDF.</p>
       </div>
-      <Tabs defaultValue={txns.length ? "overview" : "import"}>
+      <Tabs value={tab ?? (txns.length ? "overview" : "import")} onValueChange={setTab}>
         <TabsList className="no-scrollbar flex h-auto w-full justify-start overflow-x-auto rounded-xl p-1 [&>*]:shrink-0">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="budgets">Budgets</TabsTrigger>
@@ -97,7 +123,7 @@ function SpendingPage() {
         <TabsContent value="budgets">{fin && <Budgets data={fin} txns={txns} uid={uid} />}</TabsContent>
         <TabsContent value="sinking">{fin && <SinkingFunds data={fin} uid={uid} />}</TabsContent>
         <TabsContent value="import">
-          <Importer uid={uid} accounts={fin?.accounts ?? []} rules={rules} onDone={refresh} />
+          <Importer uid={uid} accounts={fin?.accounts ?? []} rules={rules} onDone={refresh} sharedFile={sharedFile} />
         </TabsContent>
         <TabsContent value="transactions"><TxnList txns={txns} uid={uid} rules={rules} onChange={() => { refresh(); qc.invalidateQueries({ queryKey: ["rules", uid] }); }} /></TabsContent>
         <TabsContent value="recurring"><Recurring items={recurring} /></TabsContent>
@@ -153,7 +179,7 @@ function Overview({ months, usesActual }: { months: ReturnType<typeof monthlySpe
   );
 }
 
-function Importer({ uid, accounts, rules, onDone }: { uid: string; accounts: { id: string; name: string; currency: string }[]; rules: CategoryRule[]; onDone: () => void }) {
+function Importer({ uid, accounts, rules, onDone, sharedFile }: { uid: string; accounts: { id: string; name: string; currency: string }[]; rules: CategoryRule[]; onDone: () => void; sharedFile?: File | null }) {
   const [table, setTable] = useState<ParsedTable | null>(null);
   const [map, setMap] = useState<ColumnMapping | null>(null);
   const [accountId, setAccountId] = useState<string>("");
@@ -180,6 +206,16 @@ function Importer({ uid, accounts, rules, onDone }: { uid: string; accounts: { i
       setBusy(false);
     }
   }
+
+  // read a statement shared from another app as if it had been chosen here
+  useEffect(() => {
+    if (sharedFile) {
+      toast.message(`Reading ${sharedFile.name}…`);
+      void onFile(sharedFile);
+    }
+    // onFile is recreated each render; only react to a new shared file
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sharedFile]);
 
   const preview = useMemo(() => (table && map ? rowsToTxns(table, map, currency, rules) : null), [table, map, currency, rules]);
 

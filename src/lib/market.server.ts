@@ -163,6 +163,15 @@ export async function marketAssumptions(): Promise<MarketAssumptions> {
       );
     }
   }
+  if (fxNow) {
+    out.ngnPerUsd = v(
+      round(fxNow.rate),
+      "Naira per US dollar",
+      "Daily exchange rates",
+      "https://github.com/fawazahmed0/exchange-api",
+      fxNow.date,
+    );
+  }
   if (fxNow && fxYearAgo) {
     out.fxChange1y = v(
       round((fxNow.rate / fxYearAgo - 1) * 100),
