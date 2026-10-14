@@ -1,5 +1,6 @@
 import { LIQUID_CLASSES, summarize, type FinanceData } from "./core";
 import { ASSET_VOLATILITY, PHYSICAL_VOLATILITY, getAssumptions, toNGN } from "./assumptions";
+import { convert } from "./fx";
 import { roundMoney } from "./money";
 
 export interface PathYear {
@@ -10,6 +11,21 @@ export interface PathYear {
   netWorth: number; // NGN nominal
   real: number; // today's NGN
   usd: number;
+  /** What moved net worth during this year. Absent for the starting point. */
+  change?: YearChange;
+}
+
+/** One year's net worth change split by source; the parts add up to `total`. */
+export interface YearChange {
+  /** income − living and family costs (+ extra saving); money sent to debts or investments still counts */
+  leftover: number;
+  investmentReturns: number;
+  assetGrowth: number;
+  cashInterest: number;
+  debtInterest: number; // negative
+  /** foreign-currency items repriced as the Naira moves */
+  fxRevaluation: number;
+  total: number;
 }
 
 export interface EngineOptions {
@@ -20,8 +36,8 @@ export interface EngineOptions {
 
 /**
  * One yearly path of the household balance sheet in Naira. `draw` returns a standard-normal
- * shock; pass `null` for the deterministic median path. Shared by project() and monteCarlo()
- * so both engines use identical assumptions.
+ * shock; pass `null` for the deterministic expected path, where every pot compounds at exactly
+ * its expected return. Shared by project() and monteCarlo() so both engines use identical assumptions.
  */
 export function simulatePath(
   data: FinanceData,
@@ -66,19 +82,32 @@ export function simulatePath(
   let fxIndex = 1; // Naira weakness vs today
   let cpi = 1;
   const rho = a.infFxCorrelation;
+  // Random paths are lognormal with mean `mu`. The deterministic path uses `mu` itself so it
+  // compounds at the rate the user typed, not the lower lognormal median.
   const lognormal = (mu: number, sigma: number) => {
+    if (!draw) return mu;
     const sg = sigma * vs;
     return Math.exp(Math.log(1 + mu) - (sg * sg) / 2 + sg * z()) - 1;
   };
-  const inNGN = (value: number, cur: string) => (cur === "NGN" ? value : value * fxNow(cur) * fxIndex);
+  const inNGN = (value: number, cur: string) =>
+    cur === "NGN" ? value : value * fxNow(cur) * fxIndex;
 
   const snapshot = (): PathYear => {
     const inv = pots.reduce((t, p) => t + inNGN(p.value, p.cur), 0);
     const ast = physical.reduce((t, p) => t + inNGN(p.value, p.cur), 0);
-    const debt = loans.reduce((t, l) => t + inNGN(Math.max(0, l.balance), l.cur), 0) + Math.max(0, -cash);
+    const debt =
+      loans.reduce((t, l) => t + inNGN(Math.max(0, l.balance), l.cur), 0) + Math.max(0, -cash);
     const nw = Math.max(0, cash) + inv + ast - debt;
     const usdRate = a.ngnPerUSD * fxIndex;
-    return { cash, investments: inv, assets: ast, debt, netWorth: nw, real: nw / cpi, usd: Number.isFinite(usdRate) ? nw / usdRate : 0 };
+    return {
+      cash,
+      investments: inv,
+      assets: ast,
+      debt,
+      netWorth: nw,
+      real: nw / cpi,
+      usd: Number.isFinite(usdRate) ? nw / usdRate : 0,
+    };
   };
 
   const out: PathYear[] = [snapshot()];
@@ -97,25 +126,36 @@ export function simulatePath(
     const expenses = expenses0 * prevCpi;
 
     let contributions = 0;
+    let investmentReturns = 0;
     for (const p of pots) {
       const add = p.yearly * (a.growContributions ? grow : 1);
-      p.value = p.value * (1 + lognormal(p.mu, p.sigma)) + add;
+      const gain = p.value * lognormal(p.mu, p.sigma);
+      p.value += gain + add;
       contributions += inNGN(add, p.cur);
+      investmentReturns += inNGN(gain, p.cur);
     }
-    for (const p of physical) p.value *= 1 + lognormal(p.mu, p.sigma);
+    let assetGrowth = 0;
+    for (const p of physical) {
+      const gain = p.value * lognormal(p.mu, p.sigma);
+      p.value += gain;
+      assetGrowth += inNGN(gain, p.cur);
+    }
 
     let debtPaid = 0;
+    let debtInterest = 0;
     for (const l of loans) {
       if (l.balance <= 0) continue;
-      const owed = l.balance * (1 + l.r);
-      const paid = Math.min(l.pay, owed);
-      l.balance = owed - paid;
+      const interest = l.balance * l.r;
+      const paid = Math.min(l.pay, l.balance + interest);
+      l.balance += interest - paid;
       debtPaid += inNGN(paid, l.cur);
+      debtInterest += inNGN(interest, l.cur);
     }
 
     // surplus can be negative: it draws down cash first, then liquid then other investments
     const surplus = income - expenses - debtPaid - contributions + extra;
-    cash = (cash > 0 ? cash * (1 + infl * a.cashYieldRatio) : cash) + surplus;
+    const cashInterest = cash > 0 ? cash * infl * a.cashYieldRatio : 0;
+    cash += cashInterest + surplus;
     if (cash < 0) {
       for (const group of [pots.filter((p) => p.liquid), pots.filter((p) => !p.liquid)]) {
         const total = group.reduce((t, p) => t + inNGN(p.value, p.cur), 0);
@@ -125,7 +165,20 @@ export function simulatePath(
         cash += total * f;
       }
     }
-    out.push(snapshot());
+    const snap = snapshot();
+    const total = snap.netWorth - out[y - 1]!.netWorth;
+    const leftover = income - expenses + extra;
+    const explained = leftover + investmentReturns + assetGrowth + cashInterest - debtInterest;
+    snap.change = {
+      leftover,
+      investmentReturns,
+      assetGrowth,
+      cashInterest,
+      debtInterest: -debtInterest,
+      fxRevaluation: total - explained,
+      total,
+    };
+    out.push(snap);
   }
   return out;
 }
@@ -133,31 +186,116 @@ export function simulatePath(
 export interface ProjectionPoint {
   year: number;
   age: number | null;
+  /** investment pots only (not cash or property) */
   investments: number;
+  cash: number;
+  assets: number;
   debt: number;
   netWorth: number;
   realNetWorth: number;
+  change?: YearChange;
 }
 
-/** Deterministic median projection in the user's base currency (same engine as the Monte Carlo). */
-export function project(data: FinanceData, years = 25, extraMonthly = 0, volScale = 1): ProjectionPoint[] {
+/**
+ * Deterministic expected projection in the user's base currency: the same engine as the Monte
+ * Carlo without the randomness, so every pot compounds at exactly its expected return.
+ */
+export function project(data: FinanceData, years = 25, extraMonthly = 0): ProjectionPoint[] {
   const a = getAssumptions(data);
   const base = data.profile?.base_currency ?? "NGN";
   const extraNGN = toNGN(extraMonthly, base, a);
-  const path = simulatePath(data, years, null, { volScale, extraMonthly: extraNGN });
+  const path = simulatePath(data, years, null, { extraMonthly: extraNGN });
   const y0 = new Date().getFullYear();
   const age = data.profile?.age ?? null;
   const toBase = (ngn: number) => (base === "NGN" ? ngn : ngn / Math.max(1e-9, toNGN(1, base, a)));
-  return path.map((p, i) => {
+  const out: ProjectionPoint[] = [];
+  path.forEach((p, i) => {
     const fx = Math.pow(1 + a.fxDepreciation, i); // median Naira path
-    const conv = (ngn: number) => (base === "NGN" ? ngn : toBase(ngn) / fx);
-    return {
+    const conv = (ngn: number) => roundMoney(base === "NGN" ? ngn : toBase(ngn) / fx);
+    const point: ProjectionPoint = {
       year: y0 + i,
       age: age != null ? age + i : null,
-      investments: roundMoney(conv(p.investments + Math.max(0, p.cash) + p.assets)),
-      debt: roundMoney(conv(p.debt)),
-      netWorth: roundMoney(conv(p.netWorth)),
-      realNetWorth: roundMoney(conv(p.real)),
+      investments: conv(p.investments),
+      cash: conv(Math.max(0, p.cash)),
+      assets: conv(p.assets),
+      debt: conv(p.debt),
+      netWorth: conv(p.netWorth),
+      realNetWorth: conv(p.real),
+    };
+    const c = p.change;
+    if (c && i > 0) {
+      // re-split in the base currency; whatever the parts don't explain is currency movement
+      const parts = {
+        leftover: conv(c.leftover),
+        investmentReturns: conv(c.investmentReturns),
+        assetGrowth: conv(c.assetGrowth),
+        cashInterest: conv(c.cashInterest),
+        debtInterest: conv(c.debtInterest),
+      };
+      const total = point.netWorth - out[i - 1]!.netWorth;
+      const explained = Object.values(parts).reduce((t, x) => t + x, 0);
+      point.change = { ...parts, fxRevaluation: total - explained, total };
+    }
+    out.push(point);
+  });
+  return out;
+}
+
+export interface PotGrowth {
+  id: string;
+  name: string;
+  currency: string;
+  ratePct: number;
+  /** monthly contribution today, base currency */
+  monthly: number;
+  /** value at the end of each year, index 0 = today (base currency at today's rates) */
+  values: number[];
+  /** total paid in over the horizon, base currency */
+  contributed: number;
+  formula: string;
+}
+
+/**
+ * Each investment on its own: today's value compounding at its expected return, plus the
+ * yearly contribution added at each year end (rising with salary growth when that setting is
+ * on) — the same rule the engine uses. Shown at today's exchange rates so the growth comes from
+ * the user's rate and nothing else.
+ */
+export function investmentGrowth(data: FinanceData, years = 25): PotGrowth[] {
+  const a = getAssumptions(data);
+  const base = data.profile?.base_currency ?? "NGN";
+  const toBase = (x: number, cur: string) => convert(x, cur, base, a.rates);
+  const pct = (x: number) => `${+(x * 100).toFixed(2)}%`;
+  return data.investments.map((inv) => {
+    const r = (Number(inv.expected_return) || 0) / 100;
+    const monthly = Number(inv.monthly_contribution) || 0;
+    let v = Number(inv.current_value) || 0;
+    let contributed = 0;
+    const values = [roundMoney(toBase(v, inv.currency))];
+    for (let y = 1; y <= years; y++) {
+      const add = monthly * 12 * (a.growContributions ? Math.pow(1 + a.salaryGrowth, y - 1) : 1);
+      v = v * (1 + r) + add;
+      contributed += add;
+      values.push(roundMoney(toBase(v, inv.currency)));
+    }
+    const contrib = monthly
+      ? `, then add ${monthly.toLocaleString()} ${inv.currency} × 12` +
+        (a.growContributions
+          ? ` (the monthly amount rises ${pct(a.salaryGrowth)} a year with your salary growth)`
+          : "")
+      : "";
+    return {
+      id: inv.id,
+      name: inv.name,
+      currency: inv.currency,
+      ratePct: r * 100,
+      monthly: roundMoney(toBase(monthly, inv.currency)),
+      values,
+      contributed: roundMoney(toBase(contributed, inv.currency)),
+      formula:
+        `Each year: last year's value × (1 + ${pct(r)})${contrib}. ` +
+        (inv.currency === base ? "" : `Converted to ${base} at today's rate. `) +
+        "No market ups and downs here; the Plan tab shows the range.",
     };
   });
 }
