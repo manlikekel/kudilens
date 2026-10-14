@@ -429,6 +429,76 @@ describe("engine", () => {
     const solo = { ...pots, debts: [], flows: [data.flows[0]!], family: [] };
     expect(project(solo, 2, 0)[2]!.investments).toBe(rising.values[2]);
   });
+  it("simple interest grows only on what was paid in", () => {
+    const solo = {
+      ...data,
+      debts: [],
+      flows: [],
+      family: [],
+      investments: [
+        {
+          id: "s",
+          name: "Fund",
+          asset_class: "stocks",
+          current_value: 10_000_000,
+          currency: "NGN",
+          monthly_contribution: 0,
+          expected_return: 20,
+          notes: null,
+        },
+      ],
+    };
+    expect(project(solo, 2, 0, { interest: "simple" })[2]!.investments).toBe(14_000_000);
+    expect(project(solo, 2, 0, { interest: "compound" })[2]!.investments).toBe(14_400_000);
+    const pots = {
+      ...solo,
+      profile: { ...data.profile!, grow_contributions: false },
+      investments: [
+        {
+          ...solo.investments[0]!,
+          current_value: 1_000_000,
+          monthly_contribution: 100_000,
+          expected_return: 10,
+        },
+      ],
+    };
+    // y1: 1m + 10% of 1m + 1.2m = 2.3m; y2: 2.3m + 10% of 2.2m paid in + 1.2m = 3.72m
+    expect(investmentGrowth(pots, 2, "simple")[0]!.values).toEqual([
+      1_000_000, 2_300_000, 3_720_000,
+    ]);
+  });
+  it("protected investments are never sold; the shortfall shows as debt instead", () => {
+    const broke = {
+      ...data,
+      debts: [],
+      flows: [
+        {
+          id: "f",
+          label: "Living",
+          flow_type: "expense",
+          category: "x",
+          monthly_amount: 300_000,
+          currency: "NGN",
+          growth_rate: 0,
+        },
+      ],
+      accounts: [
+        {
+          id: "a",
+          name: "Bank",
+          kind: "bank",
+          balance: 1_000_000,
+          currency: "NGN",
+          is_emergency_fund: false,
+        },
+      ],
+    };
+    const sold = project(broke, 1, 0)[1]!;
+    const kept = project(broke, 1, 0, { protectInvestments: true })[1]!;
+    expect(kept.investments).toBeGreaterThan(sold.investments);
+    expect(kept.debt).toBeGreaterThan(0);
+    expect(sold.debt).toBe(0);
+  });
   it("project() median matches the Monte Carlo p50 within 10% at zero volatility", () => {
     const det = project(data, 10, 0);
     const mc = monteCarlo(data, { years: 10, sims: 50, volScale: 0 });

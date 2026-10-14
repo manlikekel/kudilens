@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -26,10 +26,12 @@ import {
   summarize,
   convert,
   getRates,
+  type InterestMode,
   type PotGrowth,
-  type YearChange,
+  type ProjectionPoint,
 } from "@/lib/finance";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { Meaning, Num } from "@/components/kudi";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -75,18 +77,19 @@ function Dashboard() {
   const { user } = useAuth();
   const { data, isLoading, error } = useFinance(user?.id);
   const [extra, setExtra] = useState(0);
+  const [opts, setOpts] = useProjectionOptions();
 
   const computed = useMemo(() => {
     if (!data) return null;
     const s = summarize(data);
     return {
       s,
-      base: project(data, 25),
-      boosted: project(data, 25, extra),
+      base: project(data, 25, 0, opts),
+      boosted: project(data, 25, extra, opts),
       insights: buildInsights(data),
-      pots: investmentGrowth(data, 25),
+      pots: investmentGrowth(data, 25, opts.interest),
     };
-  }, [data, extra]);
+  }, [data, extra, opts]);
 
   if (isLoading) return <p className="text-muted-foreground">Crunching your numbers…</p>;
   if (error) return <p className="text-destructive">Could not load data: {error.message}</p>;
@@ -128,18 +131,69 @@ function Dashboard() {
   const maxExtra = Math.max(Math.round(s.monthlyIncome * 0.5), cur === "USD" ? 2000 : 1_000_000);
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div className="min-w-0">
-          <p className="text-sm text-muted-foreground">
-            {data.profile?.full_name ? `Hi ${data.profile.full_name}` : "Welcome"} · shown in {cur}
-          </p>
-          <h1 className="text-3xl font-semibold">Your financial picture</h1>
+    <div className="space-y-6 lg:space-y-8">
+      <section className="hero-surface relative overflow-hidden rounded-[28px] p-6 shadow-[0_24px_60px_-30px_oklch(0.2_0.05_200/0.8)] sm:p-8">
+        <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-sm text-white/70">
+              {data.profile?.full_name ? `Hi ${data.profile.full_name.split(" ")[0]}` : "Welcome"} ·
+              shown in {cur}
+            </p>
+            <p className="mt-4 text-xs font-medium uppercase tracking-[0.16em] text-white/60">
+              Net worth
+            </p>
+            <p className="numeric mt-1 text-4xl font-semibold tracking-tight sm:text-5xl">
+              {m(s.netWorth)}
+            </p>
+            {tenYear && (
+              <p className="mt-3 inline-flex flex-wrap items-center gap-2 text-sm text-white/75">
+                <span
+                  className={cn(
+                    "numeric rounded-full px-2.5 py-0.5 text-xs font-semibold",
+                    tenYear.netWorth >= s.netWorth
+                      ? "bg-white/15 text-[oklch(0.88_0.14_163)]"
+                      : "bg-white/15 text-[oklch(0.8_0.15_25)]",
+                  )}
+                >
+                  {tenYear.netWorth >= s.netWorth ? "▲" : "▼"}{" "}
+                  {m(Math.abs(tenYear.netWorth - s.netWorth))}
+                </span>
+                expected in 10 years
+              </p>
+            )}
+          </div>
+          <Button
+            asChild
+            variant="outline"
+            className="border-white/20 bg-white/10 text-white backdrop-blur hover:bg-white/20 hover:text-white"
+          >
+            <Link to="/records">Update my numbers</Link>
+          </Button>
         </div>
-        <Button asChild variant="outline">
-          <Link to="/records">Update my numbers</Link>
-        </Button>
-      </div>
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-28 opacity-60"
+          aria-hidden="true"
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={chart} margin={{ left: 0, right: 0, top: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="hero-spark" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="oklch(0.85 0.14 163)" stopOpacity={0.45} />
+                  <stop offset="100%" stopColor="oklch(0.85 0.14 163)" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <Area
+                type="monotone"
+                dataKey="netWorth"
+                stroke="oklch(0.85 0.14 163)"
+                strokeWidth={2}
+                fill="url(#hero-spark)"
+                isAnimationActive={false}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </section>
 
       {empty && (
         <div className="panel flex flex-col gap-3 p-6 sm:flex-row sm:items-center sm:justify-between">
@@ -156,23 +210,23 @@ function Dashboard() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat label="Net worth" value={m(s.netWorth)} tone={s.netWorth >= 0 ? "good" : "bad"} />
-        <Stat
-          label="Total debt"
-          value={m(s.totalDebt)}
-          sub={`avg ${s.weightedDebtRate.toFixed(1)}% APR`}
-        />
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-4">
         <Stat
           label="Invested"
           value={m(s.totalInvested)}
           sub={`exp. ${s.weightedReturn.toFixed(1)}%/yr`}
         />
         <Stat
+          label="Total debt"
+          value={m(s.totalDebt)}
+          sub={`avg ${s.weightedDebtRate.toFixed(1)}% APR`}
+        />
+        <Stat
           label="Monthly surplus"
           value={m(s.monthlySurplus)}
           tone={s.monthlySurplus >= 0 ? "good" : "bad"}
           sub={`savings rate ${s.savingsRate.toFixed(0)}%`}
+          className="col-span-2 lg:col-span-1"
         />
       </div>
 
@@ -181,6 +235,7 @@ function Dashboard() {
           <h2 className="text-lg font-semibold">25-year net worth projection (expected case)</h2>
           <p className="text-xs text-muted-foreground">Tap or hover the chart to see any year</p>
         </div>
+        <ProjectionControls opts={opts} onChange={setOpts} />
         <div className="mt-4 h-72">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={chart} margin={{ left: 8, right: 8 }}>
@@ -264,7 +319,9 @@ function Dashboard() {
           {base[10] && (
             <>
               In 10 years that's{" "}
-              <Num formula="Expected path: each investment grows at exactly its expected return, income grows with salary growth, spending grows with inflation, debts are paid down at their minimum payments, and leftover money is kept as cash. Foreign-currency items are revalued as the Naira weakens. The Plan tab's 'likely' line sits a little lower because it includes market ups and downs.">
+              <Num
+                formula={`Expected path: each investment grows at exactly its expected return using ${opts.interest} interest, income grows with salary growth, spending grows with inflation, debts are paid down at their minimum payments, and leftover money is kept as cash. Foreign-currency items are revalued as the Naira weakens. ${opts.protectInvestments ? "Investments are never sold: if income doesn't cover costs and debt payments, the gap shows as a shortfall (debt)." : "If income doesn't cover costs and debt payments, cash is used first, then investments are sold."} The Plan tab's 'likely' line sits a little lower because it includes market ups and downs.`}
+              >
                 {m(base[10].netWorth)}
               </Num>{" "}
               (about {m(base[10].realNetWorth)} in today's money).
@@ -274,14 +331,7 @@ function Dashboard() {
           optimistic, see the Plan tab.
         </Meaning>
 
-        {base[1]?.change && (
-          <YearChangeBreakdown
-            change={base[1].change}
-            from={base[0]!.netWorth}
-            to={base[1].netWorth}
-            cur={cur}
-          />
-        )}
+        <YearByYear points={base} cur={cur} />
 
         <div className="mt-6 grid gap-4 border-t border-border pt-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
           <div>
@@ -310,6 +360,8 @@ function Dashboard() {
 
       <InvestmentGrowth
         pots={pots}
+        interest={opts.interest}
+        protect={opts.protectInvestments}
         cur={cur}
         ages={base.map((p) => p.age)}
         startYear={base[0]!.year}
@@ -367,87 +419,19 @@ function Dashboard() {
   );
 }
 
-/** Explains a single year's jump in net worth, line by line. */
-function YearChangeBreakdown({
-  change,
-  from,
-  to,
-  cur,
-}: {
-  change: YearChange;
-  from: number;
-  to: number;
-  cur: string;
-}) {
-  const m = (n: number) => formatMoney(n, cur);
-  const signed = (n: number) => `${n >= 0 ? "+" : "−"}${m(Math.abs(n))}`;
-  const rows: { label: string; value: number; formula: string }[] = [
-    {
-      label: "Income left after living & family costs",
-      value: change.leftover,
-      formula:
-        "12 months of income minus living and family costs. What you send to debts or investments still counts: it lowers what you owe or moves into your investments, so it's still yours.",
-    },
-    {
-      label: "Investment returns",
-      value: change.investmentReturns,
-      formula: "Each investment's value × its expected return for the year.",
-    },
-    {
-      label: "Property & other assets",
-      value: change.assetGrowth,
-      formula: "Each asset's value × its expected growth (negative for cars).",
-    },
-    {
-      label: "Interest on cash",
-      value: change.cashInterest,
-      formula:
-        "Cash in your accounts earns the share of inflation set in My numbers → assumptions (cash yield ratio).",
-    },
-    {
-      label: "Interest on debts",
-      value: change.debtInterest,
-      formula: "Each debt's balance × its interest rate for the year.",
-    },
-    {
-      label: "Exchange-rate effect",
-      value: change.fxRevaluation,
-      formula:
-        "Foreign-currency investments, assets and debts repriced as the Naira moves by your expected depreciation rate.",
-    },
-  ].filter((r) => Math.abs(r.value) >= 1);
-  return (
-    <div className="mt-4 rounded-lg border border-border p-4">
-      <p className="text-sm font-medium">
-        Why it goes from {m(from)} to {m(to)} next year
-      </p>
-      <ul className="mt-3 space-y-1.5 text-sm">
-        {rows.map((r) => (
-          <li key={r.label} className="flex items-center justify-between gap-3">
-            <span className="text-muted-foreground">{r.label}</span>
-            <span className={cn("numeric", r.value >= 0 ? "text-success" : "text-destructive")}>
-              <Num formula={r.formula}>{signed(r.value)}</Num>
-            </span>
-          </li>
-        ))}
-        <li className="flex items-center justify-between gap-3 border-t border-border pt-1.5 font-medium">
-          <span>Change in net worth</span>
-          <span className="numeric">{signed(change.total)}</span>
-        </li>
-      </ul>
-    </div>
-  );
-}
-
 /** Each investment compounding at exactly the rate the user entered. */
 function InvestmentGrowth({
   pots,
+  interest,
+  protect,
   cur,
   ages,
   startYear,
   deficit,
 }: {
   pots: PotGrowth[];
+  interest: InterestMode;
+  protect: boolean;
   cur: string;
   ages: (number | null)[];
   startYear: number;
@@ -578,17 +562,20 @@ function InvestmentGrowth({
       </div>
 
       <Meaning>
-        Each investment grows by exactly the yearly rate you gave it, plus what you add each month.
-        Over {last} years you'd put in {m(contributed)} and growth would add{" "}
+        {interest === "compound"
+          ? "Compound interest: each year's growth is earned on the whole balance, including last year's growth."
+          : "Simple interest: each year's growth is earned only on what you've put in, not on past growth."}{" "}
+        Each investment uses exactly the yearly rate you gave it, plus what you add each month. Over{" "}
+        {last} years you'd put in {m(contributed)} and growth would add{" "}
         {m(Math.max(0, at(last) - at(0) - contributed))} on top. Tap any future value to see the
         sum. Foreign-currency investments are shown at today's exchange rate here; the net worth
         chart above also counts them gaining value as the Naira weakens.
-        {deficit && (
+        {deficit && !protect && (
           <>
             {" "}
             <b className="text-destructive">Heads up:</b> you're spending more each month than you
-            earn, so the net worth projection sells investments to cover the gap. Those sales aren't
-            shown here.
+            earn, so the net worth projection sells investments to cover the gap. Turn on “Keep
+            investments separate” above to stop that.
           </>
         )}
       </Meaning>
@@ -601,18 +588,22 @@ function Stat({
   value,
   sub,
   tone,
+  className,
 }: {
   label: string;
   value: string;
   sub?: string;
   tone?: "good" | "bad";
+  className?: string;
 }) {
   return (
-    <div className="panel p-4">
-      <p className="text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
+    <div className={cn("panel p-4 sm:p-5", className)}>
+      <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+        {label}
+      </p>
       <p
         className={cn(
-          "numeric mt-2 text-2xl font-semibold",
+          "numeric mt-2 text-xl font-semibold tracking-tight sm:text-2xl",
           tone === "good" && "text-success",
           tone === "bad" && "text-destructive",
         )}
@@ -671,5 +662,143 @@ function Donut({
         </div>
       )}
     </section>
+  );
+}
+
+const OPTS_KEY = "kudi-projection";
+type ProjectionOptions = { interest: InterestMode; protectInvestments: boolean };
+
+/** Projection settings, remembered on this device. */
+function useProjectionOptions(): [ProjectionOptions, (o: ProjectionOptions) => void] {
+  const [opts, setOpts] = useState<ProjectionOptions>({
+    interest: "compound",
+    protectInvestments: true,
+  });
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem(OPTS_KEY) ?? "null",
+      ) as Partial<ProjectionOptions> | null;
+      if (saved)
+        setOpts({
+          interest: saved.interest === "simple" ? "simple" : "compound",
+          protectInvestments: saved.protectInvestments !== false,
+        });
+    } catch {
+      /* use defaults */
+    }
+  }, []);
+  const update = (o: ProjectionOptions) => {
+    setOpts(o);
+    try {
+      localStorage.setItem(OPTS_KEY, JSON.stringify(o));
+    } catch {
+      /* not saved, still applied */
+    }
+  };
+  return [opts, update];
+}
+
+function ProjectionControls({
+  opts,
+  onChange,
+}: {
+  opts: ProjectionOptions;
+  onChange: (o: ProjectionOptions) => void;
+}) {
+  return (
+    <div className="mt-4 flex flex-col gap-3 rounded-xl border border-border bg-secondary/40 p-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-foreground">Investment growth</span>
+        <div
+          role="radiogroup"
+          aria-label="Interest type"
+          className="flex rounded-lg bg-background/70 p-0.5"
+        >
+          {(["compound", "simple"] as const).map((mode) => (
+            <button
+              key={mode}
+              role="radio"
+              aria-checked={opts.interest === mode}
+              onClick={() => onChange({ ...opts, interest: mode })}
+              className={cn(
+                "rounded-md px-3 py-1.5 text-sm font-medium capitalize text-muted-foreground transition-colors",
+                opts.interest === mode && "bg-primary text-primary-foreground shadow-sm",
+              )}
+            >
+              {mode}
+            </button>
+          ))}
+        </div>
+      </div>
+      <label className="flex cursor-pointer items-center justify-between gap-3 text-sm sm:justify-start">
+        <span>
+          <span className="font-medium">Keep investments separate</span>
+          <span className="block text-xs text-muted-foreground">
+            Debts and bills are paid from income only. Investments are never sold.
+          </span>
+        </span>
+        <Switch
+          checked={opts.protectInvestments}
+          onCheckedChange={(v) => onChange({ ...opts, protectInvestments: v })}
+        />
+      </label>
+    </div>
+  );
+}
+
+/** Every year of the projection as a sum you can check: start + parts = end. */
+function YearByYear({ points, cur }: { points: ProjectionPoint[]; cur: string }) {
+  const short = (n: number) => formatMoney(n, cur, { compact: true });
+  const signed = (n: number) =>
+    Math.abs(n) < 1 ? "—" : `${n > 0 ? "+" : "−"}${short(Math.abs(n))}`;
+  return (
+    <details className="group mt-4 rounded-xl border border-border">
+      <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-medium">
+        Show the year-by-year calculation
+        <span className="text-muted-foreground transition-transform group-open:rotate-180">⌄</span>
+      </summary>
+      <div className="overflow-x-auto border-t border-border">
+        <table className="w-full min-w-[640px] text-right text-xs sm:text-sm">
+          <thead className="text-muted-foreground">
+            <tr>
+              <th className="px-3 py-2 text-left font-normal">Year</th>
+              <th className="px-3 py-2 font-normal">Start</th>
+              <th className="px-3 py-2 font-normal">Investment growth</th>
+              <th className="px-3 py-2 font-normal">Property &amp; cash growth</th>
+              <th className="px-3 py-2 font-normal">Saved from income</th>
+              <th className="px-3 py-2 font-normal">Debt interest</th>
+              <th className="px-3 py-2 font-normal">Exchange rate</th>
+              <th className="px-3 py-2 font-medium text-foreground">End</th>
+            </tr>
+          </thead>
+          <tbody className="numeric">
+            {points.slice(1).map((p, i) => {
+              const c = p.change!;
+              return (
+                <tr key={p.year} className="border-t border-border/70">
+                  <td className="px-3 py-2 text-left">
+                    {p.year}
+                    {p.age != null && <span className="text-muted-foreground"> · {p.age}</span>}
+                  </td>
+                  <td className="px-3 py-2">{short(points[i]!.netWorth)}</td>
+                  <td className="px-3 py-2 text-success">{signed(c.investmentReturns)}</td>
+                  <td className="px-3 py-2">{signed(c.assetGrowth + c.cashInterest)}</td>
+                  <td className="px-3 py-2">{signed(c.leftover)}</td>
+                  <td className="px-3 py-2 text-destructive">{signed(c.debtInterest)}</td>
+                  <td className="px-3 py-2">{signed(c.fxRevaluation)}</td>
+                  <td className="px-3 py-2 font-semibold">{short(p.netWorth)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        <p className="border-t border-border px-4 py-3 text-left text-xs text-muted-foreground">
+          Each row: Start + every column = End. “Saved from income” is income minus living and
+          family costs; money you put towards debts or investments still counts, because it lowers
+          what you owe or moves into your investments.
+        </p>
+      </div>
+    </details>
   );
 }
