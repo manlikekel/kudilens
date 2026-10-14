@@ -1,0 +1,39 @@
+{
+  "type": "AdaptiveCard",
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "version": "1.5",
+  "body": [
+    { "type": "TextBlock", "text": "Market today", "weight": "Bolder", "size": "Medium" },
+    {
+      "type": "ColumnSet",
+      "spacing": "Medium",
+      "columns": [
+        {
+          "type": "Column",
+          "width": "stretch",
+          "items": [
+            { "type": "TextBlock", "text": "Inflation", "isSubtle": true, "size": "Small" },
+            { "type": "TextBlock", "text": "${inflation}", "size": "ExtraLarge", "weight": "Bolder", "spacing": "None" },
+            { "type": "TextBlock", "text": "${inflationPeriod}", "isSubtle": true, "size": "Small", "spacing": "None" }
+          ]
+        },
+        {
+          "type": "Column",
+          "width": "stretch",
+          "items": [
+            { "type": "TextBlock", "text": "US dollar", "isSubtle": true, "size": "Small" },
+            { "type": "TextBlock", "text": "${naira}", "size": "ExtraLarge", "weight": "Bolder", "spacing": "None" },
+            { "type": "TextBlock", "text": "${nairaMove}", "isSubtle": true, "size": "Small", "spacing": "None", "wrap": true }
+          ]
+        }
+      ]
+    },
+    { "type": "TextBlock", "text": "Best money market fund", "isSubtle": true, "size": "Small", "spacing": "Medium" },
+    { "type": "TextBlock", "text": "${topYield} a year · ${topFund}", "weight": "Bolder", "wrap": true, "spacing": "None" },
+    { "type": "TextBlock", "text": "${fundsWeek} · updated ${updated}", "isSubtle": true, "size": "Small", "wrap": true }
+  ],
+  "actions": [
+    { "type": "Action.Execute", "title": "Compare funds", "verb": "invest" },
+    { "type": "Action.Execute", "title": "Refresh", "verb": "refresh" }
+  ]
+}

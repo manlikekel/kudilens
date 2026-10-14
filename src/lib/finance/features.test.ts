@@ -391,3 +391,63 @@ describe("insights summary", () => {
     expect(summarizeInsights([]).tone).toBe("empty");
   });
 });
+
+import { moneyWidgetData } from "../widgets";
+
+describe("My money widget", () => {
+  const data: FinanceData = {
+    profile: {
+      id: "u",
+      full_name: null,
+      age: 30,
+      retirement_age: 60,
+      base_currency: "NGN",
+      inflation_rate: 15,
+      risk_tolerance: "balanced",
+      goals: null,
+    },
+    debts: [
+      {
+        id: "d",
+        name: "Loan",
+        kind: "loan",
+        balance: 600_000,
+        currency: "NGN",
+        interest_rate: 0,
+        minimum_payment: 200_000,
+        notes: null,
+      },
+    ],
+    investments: [],
+    flows: [
+      {
+        id: "s",
+        label: "Salary",
+        flow_type: "income",
+        category: "Salary",
+        monthly_amount: 1_000_000,
+        currency: "NGN",
+        growth_rate: 0,
+      },
+    ],
+    family: [],
+    fxRates: [{ currency: "NGN", per_usd: 1500, as_of: "2026-10-01T00:00:00Z" }],
+  };
+  const now = new Date(2026, 9, 14, 9, 30);
+  it("shows safe to spend, net worth and the debt-free date", () => {
+    const w = moneyWidgetData(data, [], now);
+    expect(w.safe).toBe(formatMoney(800_000, "NGN"));
+    expect(w.debtFree).toBe("3 months (Jan 2027)");
+    expect(w.perDay).toMatch(/a day for 18 days/);
+  });
+  it("masks amounts in privacy mode", () => {
+    setAmountsHidden(true);
+    try {
+      const w = moneyWidgetData(data, [], now);
+      expect(w.safe).toBe("₦•••");
+      expect(w.netWorth).toBe("₦•••");
+    } finally {
+      setAmountsHidden(false);
+    }
+  });
+});

@@ -27,7 +27,19 @@ function setup(network: { online: boolean; body?: string }) {
   };
   const notifications: { title: string; options: Record<string, unknown> }[] = [];
   const fetched: string[] = [];
+  const widgetUpdates: { tag: string; template: string; data: string }[] = [];
   const self = {
+    widgets: {
+      getByTag: async (tag: string) => ({
+        definition: {
+          tag,
+          msAcTemplate: `/widgets/${tag}-template.json`,
+          data: `/widgets/${tag}-data.json`,
+        },
+      }),
+      updateByTag: async (tag: string, payload: { template: string; data: string }) =>
+        void widgetUpdates.push({ tag, ...payload }),
+    },
     location: new URL(ORIGIN),
     addEventListener: (type: string, fn: Handler) => (handlers[type] = fn),
     skipWaiting: () => undefined,
@@ -78,7 +90,7 @@ function setup(network: { online: boolean; body?: string }) {
   const get = (path: string, mode = "cors") => ({
     request: { method: "GET", url: ORIGIN + path, mode } as unknown as Request,
   });
-  return { dispatch, get, stores, notifications, fetched, network };
+  return { dispatch, get, stores, notifications, fetched, network, widgetUpdates };
 }
 
 describe("service worker", () => {
@@ -151,5 +163,40 @@ describe("service worker", () => {
       title: "Check-in time",
       options: { body: "Update your balances", data: { url: "/records" } },
     });
+  });
+
+  it("keeps a shared statement on the device and opens Spending to import it", async () => {
+    const form = new FormData();
+    form.append(
+      "statement",
+      new File(["Date,Amount\n2026-10-01,-500"], "gtbank.csv", { type: "text/csv" }),
+    );
+    const res = await sw.dispatch("fetch", {
+      request: new Request(`${ORIGIN}/share-target`, { method: "POST", body: form }),
+    });
+    expect(res!.status).toBe(303);
+    expect(res!.headers.get("Location")).toBe(`${ORIGIN}/spending?shared=1`);
+    const saved = sw.stores.get("kudilens-share")!.get(`${ORIGIN}/__shared/statement`)!;
+    expect(await saved.text()).toContain("2026-10-01");
+    expect(decodeURIComponent(saved.headers.get("X-Filename")!)).toBe("gtbank.csv");
+  });
+
+  it("opens Ask Kudi with shared text filled in", async () => {
+    const form = new FormData();
+    form.append("text", "Your account was debited N25,000");
+    const res = await sw.dispatch("fetch", {
+      request: new Request(`${ORIGIN}/share-target`, { method: "POST", body: form }),
+    });
+    expect(res!.headers.get("Location")).toBe(
+      `${ORIGIN}/advisor?q=${encodeURIComponent("Your account was debited N25,000")}`,
+    );
+  });
+
+  it("stores the dashboard summary and refreshes the My money widget", async () => {
+    sw.network.body = '{"type":"AdaptiveCard"}';
+    await sw.dispatch("message", { data: { type: "widget-data", data: { safe: "₦10K" } } });
+    const saved = sw.stores.get("kudilens-widgets")!.get(`${ORIGIN}/widgets/money-data.json`)!;
+    expect(JSON.parse(await saved.text())).toEqual({ safe: "₦10K" });
+    expect(sw.widgetUpdates.at(-1)).toMatchObject({ tag: "money", data: '{"safe":"₦10K"}' });
   });
 });

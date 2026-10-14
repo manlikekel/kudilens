@@ -14,6 +14,12 @@
  *
  * Notifications: shows pushed messages and opens the right page when one is tapped. Sending them
  * needs a push server (VAPID keys and subscriptions), which is a separate step.
+ *
+ * Share target: files shared to KudiLens (bank statements) are held in a device-only cache and
+ * the Spending page imports them; shared text opens Ask Kudi with it filled in.
+ *
+ * Windows widgets: "money" shows a summary the app hands over after the dashboard loads (kept on
+ * this device only; amounts stay masked in privacy mode); "market" uses public data.
  */
 const VERSION = "kudilens-v2";
 const SHELL_CACHE = `${VERSION}-shell`;
@@ -25,6 +31,9 @@ const SHELL = [
   "/icons/icon-512.png",
   "/icons/icon.svg",
 ];
+const SHARE_CACHE = "kudilens-share";
+const WIDGET_CACHE = "kudilens-widgets";
+const MONEY_DATA = "/widgets/money-data.json";
 const MARKET = ["/api/market", "/api/ng-funds", "/api/funds?country=US", "/api/funds?country=GB", "/api/funds?country=CA"];
 
 self.addEventListener("install", (event) => {
@@ -37,7 +46,8 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
       const keys = await caches.keys();
-      await Promise.all(keys.filter((k) => !k.startsWith(VERSION)).map((k) => caches.delete(k)));
+      const keep = (k) => k.startsWith(VERSION) || k === SHARE_CACHE || k === WIDGET_CACHE;
+      await Promise.all(keys.filter((k) => !keep(k)).map((k) => caches.delete(k)));
       if (self.registration.navigationPreload) await self.registration.navigationPreload.enable();
       await self.clients.claim();
     })(),
@@ -46,6 +56,78 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("message", (event) => {
   if (event.data === "SKIP_WAITING") self.skipWaiting();
+  // the dashboard hands over a summary for the "My money" widget
+  if (event.data && event.data.type === "widget-data") {
+    event.waitUntil(
+      (async () => {
+        const cache = await caches.open(WIDGET_CACHE);
+        await cache.put(
+          MONEY_DATA,
+          new Response(JSON.stringify(event.data.data), { headers: { "Content-Type": "application/json" } }),
+        );
+        await updateWidgets("money");
+      })(),
+    );
+  }
+});
+
+/* ---------------- share target ---------------- */
+
+async function receiveShare(request) {
+  const form = await request.formData();
+  const file = form.get("statement");
+  if (file && typeof file === "object" && file.size > 0) {
+    const cache = await caches.open(SHARE_CACHE);
+    await cache.put(
+      "/__shared/statement",
+      new Response(file, {
+        headers: { "Content-Type": file.type || "application/octet-stream", "X-Filename": encodeURIComponent(file.name || "statement") },
+      }),
+    );
+    return Response.redirect(new URL("/spending?shared=1", self.location.origin).href, 303);
+  }
+  const text = [form.get("title"), form.get("text"), form.get("url")].filter(Boolean).join("\n").trim();
+  const to = text ? `/advisor?q=${encodeURIComponent(text.slice(0, 2000))}` : "/";
+  return Response.redirect(new URL(to, self.location.origin).href, 303);
+}
+
+/* ---------------- Windows widgets ---------------- */
+
+async function widgetPayload(definition) {
+  const [template, data] = await Promise.all([
+    fetch(definition.msAcTemplate).then((r) => r.text()),
+    definition.tag === "money"
+      ? caches
+          .open(WIDGET_CACHE)
+          .then((c) => c.match(MONEY_DATA))
+          .then((r) => (r ? r.text() : fetch(definition.data).then((x) => x.text())))
+      : fetch(definition.data).then((r) => r.text()),
+  ]);
+  return { template, data };
+}
+
+async function updateWidgets(tag) {
+  if (!self.widgets) return;
+  const widget = await self.widgets.getByTag(tag);
+  if (!widget) return;
+  await self.widgets.updateByTag(tag, await widgetPayload(widget.definition));
+}
+
+async function renderWidget(widget) {
+  if (!self.widgets || !widget) return;
+  await self.widgets.updateByInstanceId(widget.instanceId, await widgetPayload(widget.definition));
+}
+
+self.addEventListener("widgetinstall", (event) => event.waitUntil(renderWidget(event.widget)));
+self.addEventListener("widgetresume", (event) => event.waitUntil(renderWidget(event.widget)));
+self.addEventListener("widgetclick", (event) => {
+  const target = { open: "/", spend: "/", invest: "/invest", checkin: "/records" }[event.action] || "/";
+  event.waitUntil(
+    (async () => {
+      if (event.action === "refresh") return renderWidget(event.widget);
+      return self.clients.openWindow(target);
+    })(),
+  );
 });
 
 const isStatic = (url) =>
@@ -74,8 +156,12 @@ async function refreshMarket() {
 
 self.addEventListener("fetch", (event) => {
   const { request } = event;
-  if (request.method !== "GET") return;
   const url = new URL(request.url);
+  if (request.method === "POST" && url.origin === self.location.origin && url.pathname === "/share-target") {
+    event.respondWith(receiveShare(request));
+    return;
+  }
+  if (request.method !== "GET") return;
 
   if (request.mode === "navigate" && url.origin === self.location.origin) {
     event.respondWith(
@@ -139,7 +225,8 @@ self.addEventListener("sync", (event) => {
 });
 
 self.addEventListener("periodicsync", (event) => {
-  if (event.tag === "refresh-market") event.waitUntil(refreshMarket());
+  if (event.tag === "refresh-market")
+    event.waitUntil(Promise.all([refreshMarket(), updateWidgets("market"), updateWidgets("money")]));
 });
 
 self.addEventListener("push", (event) => {

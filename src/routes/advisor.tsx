@@ -35,10 +35,14 @@ export const Route = createFileRoute("/advisor")({
       { title: "Ask Kudi — KudiLens" },
       {
         name: "description",
-        content: "Ask an AI analyst about your debts, investments and family finances, grounded in your own numbers.",
+        content:
+          "Ask an AI analyst about your debts, investments and family finances, grounded in your own numbers.",
       },
       { property: "og:title", content: "Ask Kudi — KudiLens" },
-      { property: "og:description", content: "Personal, data-driven financial advice from your own records." },
+      {
+        property: "og:description",
+        content: "Personal, data-driven financial advice from your own records.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -70,6 +74,15 @@ function Chat() {
   const { user, session } = useAuth();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
+  // text shared to KudiLens from another app arrives as ?q=; fill it in for the user to send
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("q");
+    if (!q) return;
+    window.history.replaceState(null, "", "/advisor");
+    setInput(`Can you explain this and what it means for my money?
+
+${q}`);
+  }, []);
   const [busy, setBusy] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
@@ -180,7 +193,9 @@ function Chat() {
                 {m.content ? (
                   <KudiMarkdown text={m.content} />
                 ) : (
-                  <span className="animate-pulse text-muted-foreground">Analysing your numbers…</span>
+                  <span className="animate-pulse text-muted-foreground">
+                    Analysing your numbers…
+                  </span>
                 )}
               </div>
             </div>
