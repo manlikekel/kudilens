@@ -22,7 +22,7 @@ export const Route = createFileRoute("/api/ideas")({
         try {
           const { data: idea, error } = await supabase.from("investment_ideas").select("*").eq("id", body.id).maybeSingle();
           if (error || !idea) return new Response("Idea not found", { status: 404 });
-          const data = await loadData(supabase, userId);
+          const data = await loadData(supabase, userId, auth.live);
           const review = await completeJSON<Record<string, unknown>>(
             SYSTEM,
             `Financial summary:\n${JSON.stringify(aiSummary(data))}\n\nIdea: ${idea.title}\nAmount: ${idea.amount} ${idea.currency}\nNotes: ${idea.notes ?? "none"}`,

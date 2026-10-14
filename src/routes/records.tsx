@@ -4,7 +4,17 @@ import { Plus, Save, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/hooks/useAuth";
 import { SAVINGS_VEHICLES } from "@/lib/finance";
-import { type TableName, useFinance, useUpsertRow, useDeleteRow, useSaveProfile } from "@/lib/useFinance";
+import {
+  type TableName,
+  useFinance,
+  useUpsertRow,
+  useDeleteRow,
+  useSaveProfile,
+  useMarket,
+  useLiveAssumptions,
+} from "@/lib/useFinance";
+import type { LiveValue, MarketAssumptions } from "@/lib/finance";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -273,6 +283,29 @@ function ProfileSection({ data }: { data: NonNullable<ReturnType<typeof useFinan
   );
   const official = Object.fromEntries((data.fxRates ?? []).map((r) => [r.currency, r]));
   const set = (k: string, v: Draft[string]) => setForm((f) => ({ ...f, [k]: v }));
+  const liveOn = (user?.user_metadata as { live_assumptions?: boolean } | undefined)?.live_assumptions !== false;
+  const market = useMarket().data;
+  const toggleLive = useLiveAssumptions(user?.id);
+  /** the live value for a profile field, when live data is on and available */
+  const live = (k: string): LiveValue | undefined =>
+    liveOn && market ? market[LIVE_FIELDS[k] as keyof MarketAssumptions] as LiveValue | undefined : undefined;
+  const assumption = (k: string) => {
+    const lv = LIVE_FIELDS[k] ? live(k) : undefined;
+    return lv ? (
+      <>
+        <Input type="number" value={String(lv.value)} disabled />
+        <p className="mt-1 text-[11px] text-muted-foreground" title={lv.label}>
+          Live ·{" "}
+          <a href={lv.sourceUrl} target="_blank" rel="noreferrer" className="underline">
+            {lv.source}
+          </a>{" "}
+          · {lv.asOf}
+        </p>
+      </>
+    ) : (
+      <Input type="number" value={String(form[k] ?? "")} onChange={(e) => set(k, Number(e.target.value))} />
+    );
+  };
 
   return (
     <section className="panel p-6">
@@ -337,13 +370,36 @@ function ProfileSection({ data }: { data: NonNullable<ReturnType<typeof useFinan
             ))}
           </div>
         </div>
-        <Field label="Expected inflation %/yr">
-          <Input
-            type="number"
-            value={String(form["inflation_rate"] ?? "")}
-            onChange={(e) => set("inflation_rate", Number(e.target.value))}
-          />
-        </Field>
+        <div className="rounded-xl border border-border bg-secondary/40 p-4 sm:col-span-2">
+          <label className="flex items-start justify-between gap-4">
+            <span>
+              <span className="block text-sm font-medium">Fill economic assumptions from live data</span>
+              <span className="mt-0.5 block text-xs text-muted-foreground">
+                Inflation, Naira loss, foreign inflation, the inflation ↔ Naira link, what cash earns and school-fee
+                inflation come from the CBN, World Bank, US BLS and SEC Nigeria, and update as new figures and
+                exchange rates come in. Turn off to use your own numbers.
+              </span>
+            </span>
+            <Switch
+              checked={liveOn}
+              disabled={toggleLive.isPending}
+              onCheckedChange={(v) =>
+                toggleLive.mutate(v, {
+                  onSuccess: () => toast.success(v ? "Using live data." : "Using your own numbers."),
+                  onError: (e) => toast.error(e.message),
+                })
+              }
+            />
+          </label>
+          {liveOn && market?.fxChange1y && (
+            <p className="mt-3 text-xs text-muted-foreground">
+              For context: the Naira moved {market.fxChange1y.value > 0 ? "+" : ""}
+              {market.fxChange1y.value}% against the dollar in the last 12 months. The Naira-loss figure uses the
+              10-year average, which suits a long-term plan better than one year.
+            </p>
+          )}
+        </div>
+        <Field label="Expected inflation %/yr">{assumption("inflation_rate")}</Field>
         <Field label="Risk tolerance">
           <Select value={String(form["risk_tolerance"])} onValueChange={(v) => set("risk_tolerance", v)}>
             <SelectTrigger>
@@ -366,11 +422,11 @@ function ProfileSection({ data }: { data: NonNullable<ReturnType<typeof useFinan
             ["health_cover", "Health insurance cover / yr"],
             ["foreign_inflation", "Foreign (USD/CAD) inflation %/yr"],
             ["inflation_fx_correlation", "Inflation ↔ Naira correlation (−1 to 1)"],
-            ["cash_yield_ratio", "Cash earns this share of inflation (0–1)"],
+            ["cash_yield_ratio", "Cash earns this share of inflation (0–1.5)"],
           ] as const
         ).map(([k, label]) => (
           <Field key={k} label={label}>
-            <Input type="number" value={String(form[k] ?? "")} onChange={(e) => set(k, Number(e.target.value))} />
+            {assumption(k)}
           </Field>
         ))}
         <Field label="Investment contributions rise with my salary">
@@ -388,7 +444,7 @@ function ProfileSection({ data }: { data: NonNullable<ReturnType<typeof useFinan
           </Select>
         </Field>
         <p className="text-xs text-muted-foreground sm:col-span-2">
-          These are your own assumptions, not live market data. The Plan tab uses them for every forecast.
+          Every forecast in the app uses these assumptions{liveOn ? ", with live values where shown" : ""}.
         </p>
         <Field label="My goals">
           <Textarea
@@ -402,6 +458,16 @@ function ProfileSection({ data }: { data: NonNullable<ReturnType<typeof useFinan
     </section>
   );
 }
+
+/** Profile fields that can come from live market data, and their key in MarketAssumptions. */
+const LIVE_FIELDS: Record<string, string> = {
+  inflation_rate: "inflation",
+  fx_depreciation: "fxDepreciation",
+  education_inflation: "educationInflation",
+  foreign_inflation: "foreignInflation",
+  inflation_fx_correlation: "inflationFxCorrelation",
+  cash_yield_ratio: "cashYieldRatio",
+};
 
 /* ---------------- generic list sections ---------------- */
 

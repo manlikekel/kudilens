@@ -1,5 +1,6 @@
 import { buildRates, convert, type FxRateRow, type FxRates } from "./fx";
 import { roundMoney } from "./money";
+import type { MarketAssumptions } from "./market";
 
 export type Currency = "NGN" | "USD" | "GBP" | "EUR" | "CAD";
 
@@ -127,6 +128,8 @@ export interface FinanceData {
   fxRates?: FxRateRow[];
   /** Average actual monthly spending in Naira from imported transactions (excludes transfers, savings and debt repayments). */
   actualSpend?: { avgMonthly: number; months: number };
+  /** live economic assumptions; present only when the user has "Fill from live data" on */
+  market?: MarketAssumptions;
 }
 
 /** Official rates merged with the user's own overrides. */

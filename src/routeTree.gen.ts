@@ -28,6 +28,7 @@ import { Route as ApiCategoriseRouteImport } from './routes/api/categorise'
 import { Route as ApiFundsRouteImport } from './routes/api/funds'
 import { Route as ApiIdeasRouteImport } from './routes/api/ideas'
 import { Route as ApiInsightsRouteImport } from './routes/api/insights'
+import { Route as ApiMarketRouteImport } from './routes/api/market'
 import { Route as ApiNgFundsRouteImport } from './routes/api/ng-funds'
 import { Route as ApiReviewRouteImport } from './routes/api/review'
 import { Route as ApiStatementsRouteImport } from './routes/api/statements'
@@ -128,6 +129,11 @@ const ApiInsightsRoute = ApiInsightsRouteImport.update({
   path: '/api/insights',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMarketRoute = ApiMarketRouteImport.update({
+  id: '/api/market',
+  path: '/api/market',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiNgFundsRoute = ApiNgFundsRouteImport.update({
   id: '/api/ng-funds',
   path: '/api/ng-funds',
@@ -169,6 +175,7 @@ export interface FileRoutesByFullPath {
   '/api/funds': typeof ApiFundsRoute
   '/api/ideas': typeof ApiIdeasRoute
   '/api/insights': typeof ApiInsightsRoute
+  '/api/market': typeof ApiMarketRoute
   '/api/ng-funds': typeof ApiNgFundsRoute
   '/api/review': typeof ApiReviewRoute
   '/api/statements': typeof ApiStatementsRoute
@@ -194,6 +201,7 @@ export interface FileRoutesByTo {
   '/api/funds': typeof ApiFundsRoute
   '/api/ideas': typeof ApiIdeasRoute
   '/api/insights': typeof ApiInsightsRoute
+  '/api/market': typeof ApiMarketRoute
   '/api/ng-funds': typeof ApiNgFundsRoute
   '/api/review': typeof ApiReviewRoute
   '/api/statements': typeof ApiStatementsRoute
@@ -220,6 +228,7 @@ export interface FileRoutesById {
   '/api/funds': typeof ApiFundsRoute
   '/api/ideas': typeof ApiIdeasRoute
   '/api/insights': typeof ApiInsightsRoute
+  '/api/market': typeof ApiMarketRoute
   '/api/ng-funds': typeof ApiNgFundsRoute
   '/api/review': typeof ApiReviewRoute
   '/api/statements': typeof ApiStatementsRoute
@@ -247,6 +256,7 @@ export interface FileRouteTypes {
     | '/api/funds'
     | '/api/ideas'
     | '/api/insights'
+    | '/api/market'
     | '/api/ng-funds'
     | '/api/review'
     | '/api/statements'
@@ -272,6 +282,7 @@ export interface FileRouteTypes {
     | '/api/funds'
     | '/api/ideas'
     | '/api/insights'
+    | '/api/market'
     | '/api/ng-funds'
     | '/api/review'
     | '/api/statements'
@@ -297,6 +308,7 @@ export interface FileRouteTypes {
     | '/api/funds'
     | '/api/ideas'
     | '/api/insights'
+    | '/api/market'
     | '/api/ng-funds'
     | '/api/review'
     | '/api/statements'
@@ -323,6 +335,7 @@ export interface RootRouteChildren {
   ApiFundsRoute: typeof ApiFundsRoute
   ApiIdeasRoute: typeof ApiIdeasRoute
   ApiInsightsRoute: typeof ApiInsightsRoute
+  ApiMarketRoute: typeof ApiMarketRoute
   ApiNgFundsRoute: typeof ApiNgFundsRoute
   ApiReviewRoute: typeof ApiReviewRoute
   ApiStatementsRoute: typeof ApiStatementsRoute
@@ -464,6 +477,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiInsightsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/market': {
+      id: '/api/market'
+      path: '/api/market'
+      fullPath: '/api/market'
+      preLoaderRoute: typeof ApiMarketRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/ng-funds': {
       id: '/api/ng-funds'
       path: '/api/ng-funds'
@@ -515,6 +535,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiFundsRoute: ApiFundsRoute,
   ApiIdeasRoute: ApiIdeasRoute,
   ApiInsightsRoute: ApiInsightsRoute,
+  ApiMarketRoute: ApiMarketRoute,
   ApiNgFundsRoute: ApiNgFundsRoute,
   ApiReviewRoute: ApiReviewRoute,
   ApiStatementsRoute: ApiStatementsRoute,
