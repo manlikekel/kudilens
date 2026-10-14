@@ -17,8 +17,14 @@ export interface PathYear {
 
 /** One year's net worth change split by source; the parts add up to `total`. */
 export interface YearChange {
-  /** income − living and family costs (+ extra saving); money sent to debts or investments still counts */
-  leftover: number;
+  /**
+   * Income − living and family costs (+ extra saving) is split three ways:
+   * paid to debts (lowers what you owe), added to investments, and what's left kept as cash
+   * (negative when income falls short).
+   */
+  debtPaid: number;
+  contributions: number;
+  keptAsCash: number;
   investmentReturns: number;
   assetGrowth: number;
   cashInterest: number;
@@ -188,10 +194,18 @@ export function simulatePath(
     }
     const snap = snapshot();
     const total = snap.netWorth - out[y - 1]!.netWorth;
-    const leftover = income - expenses + extra;
-    const explained = leftover + investmentReturns + assetGrowth + cashInterest - debtInterest;
+    const explained =
+      debtPaid +
+      contributions +
+      surplus +
+      investmentReturns +
+      assetGrowth +
+      cashInterest -
+      debtInterest;
     snap.change = {
-      leftover,
+      debtPaid,
+      contributions,
+      keptAsCash: surplus,
       investmentReturns,
       assetGrowth,
       cashInterest,
@@ -252,7 +266,9 @@ export function project(
     if (c && i > 0) {
       // re-split in the base currency; whatever the parts don't explain is currency movement
       const parts = {
-        leftover: conv(c.leftover),
+        debtPaid: conv(c.debtPaid),
+        contributions: conv(c.contributions),
+        keptAsCash: conv(c.keptAsCash),
         investmentReturns: conv(c.investmentReturns),
         assetGrowth: conv(c.assetGrowth),
         cashInterest: conv(c.cashInterest),

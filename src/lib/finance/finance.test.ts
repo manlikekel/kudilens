@@ -384,7 +384,9 @@ describe("engine", () => {
     for (const pt of p.slice(1)) {
       const c = pt.change!;
       const sum =
-        c.leftover +
+        c.debtPaid +
+        c.contributions +
+        c.keptAsCash +
         c.investmentReturns +
         c.assetGrowth +
         c.cashInterest +
@@ -394,8 +396,15 @@ describe("engine", () => {
     }
     const prev = project(data, 1, 0);
     expect(prev[1]!.change!.total).toBe(prev[1]!.netWorth - prev[0]!.netWorth);
-    // salary 1.2m − living 0.6m − family 50k, for 12 months
-    expect(p[1]!.change!.leftover).toBe((1_200_000 - 600_000 - 50_000) * 12);
+    // salary 1.2m − living 0.6m − family 50k = 550k a month, split into debt payments
+    // (50k + 150k), investing (none here) and what's kept as cash (350k)
+    const c1 = p[1]!.change!;
+    expect(c1.debtPaid).toBe(200_000 * 12);
+    expect(c1.contributions).toBe(0);
+    expect(c1.keptAsCash).toBe(350_000 * 12);
+    expect(c1.debtPaid + c1.contributions + c1.keptAsCash).toBe(
+      (1_200_000 - 600_000 - 50_000) * 12,
+    );
     // card 500k × 36% + car 3m × 18%
     expect(p[1]!.change!.debtInterest).toBe(-(500_000 * 0.36 + 3_000_000 * 0.18));
     // USD bond gains 15% in Naira terms
