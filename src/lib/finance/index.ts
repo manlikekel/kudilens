@@ -16,3 +16,4 @@ export * from "./transactions";
 export * from "./wealth";
 export * from "./market";
 export * from "./debtfree";
+export * from "./history";

@@ -152,3 +152,41 @@ describe("real spending in the projection", () => {
     expect(simulatePath(none, 1, null, { actualSpending: true })[1]!.cash).toBe(600_000 * 12);
   });
 });
+
+import { checkInCalendar, checkInSummary, monthKey, sameSnapshot, type Snapshot } from "./history";
+
+describe("net worth history and check-in", () => {
+  const snap = (month: string, nw: number, debt: number): Snapshot => ({
+    month,
+    currency: "NGN",
+    net_worth: nw,
+    investments: 0,
+    cash: 0,
+    assets: 0,
+    debt,
+  });
+  it("keys snapshots by month", () => {
+    expect(monthKey(new Date(2026, 9, 14))).toBe("2026-10-01");
+  });
+  it("compares with the latest earlier month", () => {
+    const now = snap("2026-10-01", 65_000_000, 37_000_000);
+    const s = checkInSummary(
+      [snap("2026-08-01", 50e6, 45e6), snap("2026-09-01", 61.5e6, 40.2e6), now],
+      now,
+    )!;
+    expect(s.since).toBe("2026-09-01");
+    expect(s.netWorth).toBe(3_500_000);
+    expect(s.debt).toBe(-3_200_000);
+    expect(checkInSummary([now], now)).toBeNull();
+  });
+  it("only rewrites a snapshot when something changed", () => {
+    expect(sameSnapshot(snap("2026-10-01", 1, 2), snap("2026-10-01", 1, 2))).toBe(true);
+    expect(sameSnapshot(snap("2026-10-01", 1, 2), snap("2026-10-01", 1, 3))).toBe(false);
+    expect(sameSnapshot(undefined, snap("2026-10-01", 1, 2))).toBe(false);
+  });
+  it("makes a monthly calendar reminder", () => {
+    const ics = checkInCalendar("https://kudilens.lovable.app", new Date(2026, 9, 14));
+    expect(ics).toContain("RRULE:FREQ=MONTHLY;BYMONTHDAY=1");
+    expect(ics).toContain("DTSTART:20261101T090000");
+  });
+});

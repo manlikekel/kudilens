@@ -26,6 +26,7 @@ import {
   summarize,
   convert,
   getRates,
+  getAssumptions,
   type InterestMode,
   type PotGrowth,
   type ProjectionPoint,
@@ -34,6 +35,12 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Meaning, Num } from "@/components/kudi";
 import { DebtCountdown } from "@/components/dashboard/DebtCountdown";
+import {
+  MonthlyCheckIn,
+  NeedsDatabaseUpdate,
+  NetWorthHistory,
+} from "@/components/dashboard/Growth";
+import { useRecordSnapshot, useSnapshots } from "@/lib/useGrowth";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -77,6 +84,8 @@ const CHART_COLORS = [
 function Dashboard() {
   const { user } = useAuth();
   const { data, isLoading, error } = useFinance(user?.id);
+  const snapshots = useSnapshots(user?.id);
+  useRecordSnapshot(user?.id, data);
   const [extra, setExtra] = useState(0);
   const [opts, setOpts] = useProjectionOptions();
 
@@ -196,6 +205,8 @@ function Dashboard() {
         </div>
       </section>
 
+      {!empty && <MonthlyCheckIn data={data} history={snapshots.data ?? []} />}
+
       {empty && (
         <div className="panel flex flex-col gap-3 p-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -232,6 +243,12 @@ function Dashboard() {
       </div>
 
       <DebtCountdown data={data} />
+
+      {snapshots.missing ? (
+        <NeedsDatabaseUpdate feature="Net worth history and the monthly check-in" />
+      ) : (
+        snapshots.data && <NetWorthHistory history={snapshots.data} cur={cur} />
+      )}
 
       <section className="panel p-5">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
@@ -313,8 +330,8 @@ function Dashboard() {
           The solid line is what you're likely to own minus what you owe each year, if your income,
           spending, debts and investments carry on as entered in My numbers. It's shown in future
           Naira, which buy less as prices rise — so the dashed line shows the same amount in{" "}
-          <b>today's money</b> after {data.profile?.inflation_rate ?? 0}% yearly inflation. That
-          dashed line is the one to judge your real progress by. Today you start at{" "}
+          <b>today's money</b> after {+(getAssumptions(data).inflation * 100).toFixed(2)}% yearly
+          inflation. That dashed line is the one to judge your real progress by. Today you start at{" "}
           <Num formula="Accounts + investments + property − all debts, converted at today's exchange rates. This is the left-most point on the chart.">
             {m(s.netWorth)}
           </Num>
