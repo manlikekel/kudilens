@@ -41,6 +41,7 @@ import {
 } from "@/components/dashboard/Growth";
 import { useRecentTxns, useRecordSnapshot, useSnapshots } from "@/lib/useGrowth";
 import { SafeToSpend } from "@/components/dashboard/SafeToSpend";
+import { SetupChecklist } from "@/components/dashboard/SetupChecklist";
 import { InsightsSection } from "@/components/dashboard/InsightsSection";
 import { onboarded } from "@/lib/onboarding";
 import { startTour, tourSeen } from "@/lib/tour";
@@ -270,6 +271,8 @@ function Dashboard() {
       </div>
 
       <InsightsSection insights={insights} />
+
+      <SetupChecklist data={data} hasTxns={(recentTxns.data ?? []).length > 0} />
 
       {!empty && <SafeToSpend data={data} txns={recentTxns.data ?? []} />}
 
