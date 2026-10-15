@@ -365,7 +365,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <InstallBanner mode={installMode} onInstall={onInstall} />
       <Tour />
-      <QuickAdd userId={user.id} currency={baseCurrency} />
+      <QuickAdd userId={user.id} currency={baseCurrency} data={shellData} />
     </div>
   );
 }
