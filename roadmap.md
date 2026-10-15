@@ -27,3 +27,8 @@
 - [ ] 10. Household sharing
 - [ ] 13. Polish
 - [ ] Email sending from notify.kudilens.com — set up; waiting on DNS records at the domain provider
+
+## Friendlier all-in-one ideas (approved list)
+- [x] Quick add button on every page
+- [x] Setup checklist on Dashboard
+- [ ] Remaining ideas (Today card, reminders, search, bills hub, documents vault, check-in, accessibility) — waiting on user to pick next
