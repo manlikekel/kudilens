@@ -133,6 +133,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { locked, config: lockConfig } = useAppLock();
   const [needsCode, codeDone] = useNeedsSecondStep(user?.id);
 
+  const { data: shellData } = useFinance(user?.id);
+  const baseCurrency = shellData?.profile?.base_currency ?? "NGN";
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth" });
   }, [loading, user, navigate]);
