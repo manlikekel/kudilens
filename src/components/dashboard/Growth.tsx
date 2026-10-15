@@ -196,7 +196,7 @@ export function MonthlyCheckIn({ data, history }: { data: FinanceData; history: 
       )}
       <div className="mt-4 flex flex-wrap gap-2">
         <Button asChild>
-          <Link to="/records">Update my numbers</Link>
+          <Link to="/check-in">Start the 2-minute check-in</Link>
         </Button>
         <Button variant="outline" onClick={finish}>
           <CheckCircle2 /> All up to date
