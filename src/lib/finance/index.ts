@@ -19,3 +19,4 @@ export * from "./debtfree";
 export * from "./history";
 export * from "./budget";
 export * from "./insightSummary";
+export * from "./health";

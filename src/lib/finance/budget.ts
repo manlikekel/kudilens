@@ -12,6 +12,18 @@ export const SPEND_CATEGORIES = CATEGORIES.filter(
 );
 const SPEND = new Set<string>(SPEND_CATEGORIES);
 
+/** Everyday spending that repeats (a weekly shop, a favourite lunch spot) isn't a bill. */
+const EVERYDAY = new Set([
+  "Groceries",
+  "Eating out",
+  "Shopping",
+  "Fuel",
+  "Transport",
+  "Entertainment",
+  "Uncategorised",
+]);
+export const isBill = (category: string) => SPEND.has(category) && !EVERYDAY.has(category);
+
 const ym = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 
 /** This calendar month's spending per category, in the base currency (major units). */
@@ -123,7 +135,7 @@ export function safeToSpend(data: FinanceData, txns: SpendTxn[], today = new Dat
         .map((t) => t.merchant.split(" ").slice(0, 2).join(" ")),
     );
     bills = detectRecurring(txns)
-      .filter((r) => SPEND.has(r.category) && !paidThisMonth.has(r.merchant))
+      .filter((r) => isBill(r.category) && !paidThisMonth.has(r.merchant))
       .filter((r) => r.nextDate >= todayIso && r.nextDate <= endIso)
       .map((r) => ({
         merchant: r.merchant,
@@ -154,4 +166,60 @@ export function safeToSpend(data: FinanceData, txns: SpendTxn[], today = new Dat
     daysLeft,
     perDay: roundMoney(Math.max(0, safe) / daysLeft),
   };
+}
+
+export interface UpcomingBill {
+  label: string;
+  amount: number; // base currency
+  date: Date;
+  daysAway: number;
+  kind: "recurring" | "yearly";
+}
+
+/**
+ * Bills due in the next `days` days: recurring payments found in statements (not yet paid this
+ * month) and yearly lump costs from sinking funds. Soonest first.
+ */
+export function upcomingBills(
+  data: FinanceData,
+  txns: SpendTxn[],
+  today = new Date(),
+  days = 30,
+): UpcomingBill[] {
+  const base = data.profile?.base_currency ?? "NGN";
+  const rates = getRates(data);
+  const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const end = new Date(start.getTime() + days * 86_400_000);
+  const daysAway = (d: Date) => Math.round((d.getTime() - start.getTime()) / 86_400_000);
+  const prefix = ym(today);
+  const paidThisMonth = new Set(
+    txns
+      .filter((t) => t.amount_minor < 0 && t.txn_date.startsWith(prefix))
+      .map((t) => t.merchant.split(" ").slice(0, 2).join(" ")),
+  );
+  const out: UpcomingBill[] = [];
+  for (const r of detectRecurring(txns)) {
+    if (!isBill(r.category)) continue;
+    const date = new Date(`${r.nextDate}T00:00:00`);
+    if (date < start || date > end) continue;
+    if (date.getMonth() === today.getMonth() && paidThisMonth.has(r.merchant)) continue;
+    out.push({
+      label: r.merchant,
+      amount: roundMoney(convert(r.typicalMinor / 100, "NGN", base, rates)),
+      date,
+      daysAway: daysAway(date),
+      kind: "recurring",
+    });
+  }
+  for (const f of sinkingFunds(data, today)) {
+    if (f.nextDue > end) continue;
+    out.push({
+      label: f.label,
+      amount: f.amount,
+      date: f.nextDue,
+      daysAway: daysAway(f.nextDue),
+      kind: "yearly",
+    });
+  }
+  return out.sort((x, y) => x.date.getTime() - y.date.getTime());
 }

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { DEMO_BUDGETS, DEMO_USER_ID, demoSnapshots, demoTxns } from "@/lib/demo";
 import { sameSnapshot, snapshotOf, type FinanceData, type Snapshot } from "@/lib/finance";
 
 /**
@@ -32,6 +33,9 @@ export function useSnapshots(userId: string | undefined) {
     enabled: !!userId,
     retry: (n, e) => !(e instanceof MissingTableError) && n < 2,
     queryFn: () =>
+      userId === DEMO_USER_ID
+        ? Promise.resolve(demoSnapshots())
+        :
       rows<Snapshot>(
         supabase.from("net_worth_snapshots").select("*").eq("user_id", userId!).order("month"),
       ),
@@ -44,7 +48,7 @@ export function useRecordSnapshot(userId: string | undefined, data: FinanceData 
   const { data: history, missing } = useSnapshots(userId);
   const qc = useQueryClient();
   useEffect(() => {
-    if (!userId || !data || !history || missing) return;
+    if (!userId || userId === DEMO_USER_ID || !data || !history || missing) return;
     const snap = snapshotOf(data);
     if (
       sameSnapshot(
@@ -78,6 +82,9 @@ export function useBudgets(userId: string | undefined) {
     enabled: !!userId,
     retry: (n, e) => !(e instanceof MissingTableError) && n < 2,
     queryFn: () =>
+      userId === DEMO_USER_ID
+        ? Promise.resolve(DEMO_BUDGETS)
+        :
       rows<Budget>(supabase.from("budgets").select("*").eq("user_id", userId!).order("category")),
   });
   return { ...q, missing: q.error instanceof MissingTableError };
@@ -116,6 +123,9 @@ export function useScenarios(userId: string | undefined) {
     enabled: !!userId,
     retry: (n, e) => !(e instanceof MissingTableError) && n < 2,
     queryFn: () =>
+      userId === DEMO_USER_ID
+        ? Promise.resolve([] as ScenarioRow[])
+        :
       rows<ScenarioRow>(
         supabase.from("scenarios").select("*").eq("user_id", userId!).order("created_at"),
       ),
@@ -161,6 +171,9 @@ export function useRecentTxns(userId: string | undefined) {
     queryKey: ["recent-txns", userId],
     enabled: !!userId,
     queryFn: () =>
+      userId === DEMO_USER_ID
+        ? Promise.resolve(demoTxns() as RecentTxn[])
+        :
       rows<RecentTxn>(
         supabase
           .from("transactions")

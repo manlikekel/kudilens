@@ -32,6 +32,7 @@ import { useFinance } from "@/lib/useFinance";
 import { useInstall, useOnline } from "@/lib/pwa";
 import { Tour } from "@/components/Tour";
 import { QuickAdd } from "@/components/QuickAdd";
+import { DEMO_USER_ID, exitDemo } from "@/lib/demo";
 import { usePrivacy } from "@/lib/privacy";
 import { useAppLock } from "@/lib/applock";
 import { LockScreen, SecondStepScreen, useNeedsSecondStep } from "@/components/Security";
@@ -130,6 +131,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [iosHelp, setIosHelp] = useState(false);
   const [hidden, setHidden] = usePrivacy();
   const online = useOnline();
+  const demo = user?.id === DEMO_USER_ID;
   const { locked, config: lockConfig } = useAppLock();
   const [needsCode, codeDone] = useNeedsSecondStep(user?.id);
 
@@ -151,6 +153,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   const signOut = async () => {
+    if (demo) return exitDemo();
     await supabase.auth.signOut();
     navigate({ to: "/auth" });
   };
@@ -258,6 +261,21 @@ export function AppShell({ children }: { children: ReactNode }) {
       </header>
 
       <main className="mx-auto max-w-6xl px-safe pt-4 pb-[calc(7rem+env(safe-area-inset-bottom))] sm:px-6 lg:px-10 lg:pt-8 lg:pb-12">
+        {demo && (
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/30 bg-primary/10 px-4 py-2.5 text-sm print:hidden">
+            <span>
+              <b>Demo:</b> you&apos;re exploring sample numbers. Nothing you change is saved.
+            </span>
+            <span className="flex gap-2">
+              <Button size="sm" onClick={exitDemo}>
+                Create my account
+              </Button>
+              <Button size="sm" variant="ghost" onClick={exitDemo}>
+                Exit demo
+              </Button>
+            </span>
+          </div>
+        )}
         {!online && (
           <div
             role="status"
@@ -365,7 +383,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <InstallBanner mode={installMode} onInstall={onInstall} />
       <Tour />
-      <QuickAdd userId={user.id} currency={baseCurrency} />
+      <QuickAdd userId={user.id} currency={baseCurrency} data={shellData} />
     </div>
   );
 }
