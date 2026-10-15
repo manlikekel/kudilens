@@ -43,6 +43,8 @@ import { useRecentTxns, useRecordSnapshot, useSnapshots } from "@/lib/useGrowth"
 import { SafeToSpend } from "@/components/dashboard/SafeToSpend";
 import { SetupChecklist } from "@/components/dashboard/SetupChecklist";
 import { InsightsSection } from "@/components/dashboard/InsightsSection";
+import { TodayCard } from "@/components/dashboard/TodayCard";
+import { HealthCard } from "@/components/dashboard/HealthCard";
 import { onboarded } from "@/lib/onboarding";
 import { startTour, tourSeen } from "@/lib/tour";
 import { useWidgetSync } from "@/lib/widgets";
@@ -233,6 +235,8 @@ function Dashboard() {
         </div>
       </section>
 
+      {!empty && <TodayCard data={data} txns={recentTxns.data ?? EMPTY_TXNS} />}
+
       {!empty && <MonthlyCheckIn data={data} history={snapshots.data ?? []} />}
 
       {empty && (
@@ -269,6 +273,8 @@ function Dashboard() {
           className="col-span-2 lg:col-span-1"
         />
       </div>
+
+      {!empty && <HealthCard data={data} />}
 
       <InsightsSection insights={insights} />
 

@@ -5,19 +5,12 @@ import { analyzeGoals } from "./goals";
 import { emergencyFund } from "./emergency";
 import { simulatePayoff } from "./debt";
 import { nonAmortisingDebts } from "./insights";
+import { healthReport } from "./health";
 
-/** 0-100 health score from savings rate, debt load, emergency buffer and goal odds. */
+/** Score out of 100 for the AI summary; see healthReport for the parts and tips. */
 export function healthScore(data: FinanceData): { score: number; parts: Record<string, number> } {
-  const s = summarize(data);
-  const ef = emergencyFund(data);
-  const goals = analyzeGoals(data);
-  const savings = Math.min(25, Math.max(0, s.savingsRate * 100));
-  const dti = s.monthlyIncome > 0 ? s.minimumDebtPayments / s.monthlyIncome : 1;
-  const debt = Math.max(0, 25 - dti * 60);
-  const buffer = ef.target > 0 ? Math.min(25, (ef.current / ef.target) * 25) : 25;
-  const goal = goals.length ? (goals.reduce((t, g) => t + g.probability, 0) / goals.length) * 25 : 15;
-  const parts = { savings, debt, buffer, goals: goal };
-  return { score: Math.round(savings + debt + buffer + goal), parts };
+  const r = healthReport(data);
+  return { score: r.score, parts: Object.fromEntries(r.parts.map((p) => [p.key, p.points])) };
 }
 
 /**

@@ -451,3 +451,95 @@ describe("My money widget", () => {
     }
   });
 });
+
+import { healthReport } from "./health";
+import { upcomingBills } from "./budget";
+
+describe("financial health score", () => {
+  const base: FinanceData = {
+    profile: {
+      id: "u",
+      full_name: null,
+      age: 30,
+      retirement_age: 60,
+      base_currency: "NGN",
+      inflation_rate: 15,
+      risk_tolerance: "balanced",
+      goals: null,
+    },
+    debts: [],
+    investments: [],
+    flows: [
+      {
+        id: "s",
+        label: "Salary",
+        flow_type: "income",
+        category: "Salary",
+        monthly_amount: 1_000_000,
+        currency: "NGN",
+        growth_rate: 0,
+      },
+    ],
+    family: [],
+    fxRates: [{ currency: "NGN", per_usd: 1500, as_of: "2026-10-01T00:00:00Z" }],
+  };
+  it("scores a 2% saver low on saving (the old score gave full marks)", () => {
+    const r = healthReport({
+      ...base,
+      flows: [
+        ...base.flows,
+        {
+          id: "e",
+          label: "Living",
+          flow_type: "expense",
+          category: "Living",
+          monthly_amount: 980_000,
+          currency: "NGN",
+          growth_rate: 0,
+        },
+      ],
+    });
+    const saving = r.parts.find((p) => p.key === "saving")!;
+    expect(saving.points).toBeCloseTo(2, 0);
+    expect(saving.tip).toMatch(/more a month to reach 20%/);
+  });
+  it("rewards no debt and penalises heavy debt payments", () => {
+    expect(healthReport(base).parts.find((p) => p.key === "debt")!.points).toBe(20);
+    const heavy = {
+      ...base,
+      debts: [
+        {
+          id: "d",
+          name: "Loan",
+          kind: "loan",
+          balance: 5_000_000,
+          currency: "NGN",
+          interest_rate: 20,
+          minimum_payment: 600_000,
+          notes: null,
+        },
+      ],
+    };
+    expect(healthReport(heavy).parts.find((p) => p.key === "debt")!.points).toBe(0);
+  });
+  it("adds up to the score and grades it", () => {
+    const r = healthReport(base);
+    expect(r.score).toBe(Math.round(r.parts.reduce((t, p) => t + p.points, 0)));
+    expect(["Excellent", "Good", "Fair", "Needs work"]).toContain(r.grade);
+    expect(r.focus?.tip).toBeTruthy();
+  });
+  it("lists the next yearly bill within 30 days", () => {
+    const withFees = {
+      ...base,
+      lumps: [{ id: "f", label: "School fees", amount: 600_000, currency: "NGN", months: [11] }],
+    };
+    const [bill] = upcomingBills(withFees, [], new Date(2026, 9, 15));
+    expect(bill).toMatchObject({
+      label: "School fees",
+      amount: 600_000,
+      daysAway: 17,
+      kind: "yearly",
+    });
+    expect(upcomingBills(withFees, [], new Date(2026, 6, 1))).toHaveLength(0);
+  });
+});
