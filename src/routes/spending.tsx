@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Budgets, SinkingFunds } from "@/components/spending/Budgets";
+import { BillsHub } from "@/components/spending/BillsHub";
 
 export const Route = createFileRoute("/spending")({
   head: () => ({
@@ -116,7 +117,7 @@ function SpendingPage() {
           <TabsTrigger value="sinking">Sinking funds</TabsTrigger>
           <TabsTrigger value="import">Import</TabsTrigger>
           <TabsTrigger value="transactions">Transactions ({txns.length})</TabsTrigger>
-          <TabsTrigger value="recurring">Recurring ({recurring.length})</TabsTrigger>
+          <TabsTrigger value="recurring">Bills ({recurring.length})</TabsTrigger>
           <TabsTrigger value="rules">Rules ({rules.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="overview"><Overview months={months} usesActual={!!fin?.actualSpend?.months} /></TabsContent>
@@ -126,7 +127,7 @@ function SpendingPage() {
           <Importer uid={uid} accounts={fin?.accounts ?? []} rules={rules} onDone={refresh} sharedFile={sharedFile} />
         </TabsContent>
         <TabsContent value="transactions"><TxnList txns={txns} uid={uid} rules={rules} onChange={() => { refresh(); qc.invalidateQueries({ queryKey: ["rules", uid] }); }} /></TabsContent>
-        <TabsContent value="recurring"><Recurring items={recurring} /></TabsContent>
+        <TabsContent value="recurring"><BillsHub data={fin} items={recurring} /></TabsContent>
         <TabsContent value="rules"><Rules uid={uid} rules={rules} txns={txns} onChange={() => { qc.invalidateQueries({ queryKey: ["rules", uid] }); refresh(); }} /></TabsContent>
       </Tabs>
     </div>
@@ -213,8 +214,6 @@ function Importer({ uid, accounts, rules, onDone, sharedFile }: { uid: string; a
       toast.message(`Reading ${sharedFile.name}…`);
       void onFile(sharedFile);
     }
-    // onFile is recreated each render; only react to a new shared file
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sharedFile]);
 
   const preview = useMemo(() => (table && map ? rowsToTxns(table, map, currency, rules) : null), [table, map, currency, rules]);
@@ -348,33 +347,6 @@ function TxnList({ txns, uid, rules, onChange }: { txns: TxnRow[]; uid: string; 
         </div>
       </CardContent>
     </Card>
-  );
-}
-
-function Recurring({ items }: { items: ReturnType<typeof detectRecurring> }) {
-  if (!items.length) return <Card><CardContent className="p-6 text-sm text-muted-foreground">No repeating payments found yet. Import at least two months of statements.</CardContent></Card>;
-  const subsYear = items.filter((i) => i.isSubscription).reduce((t, i) => t + i.annualMinor, 0);
-  return (
-    <div className="space-y-3">
-      <Meaning>
-        We look for payments to the same place roughly every month for about the same amount. Subscriptions cost you{" "}
-        <Num formula="Sum of (typical monthly amount × 12) for every detected subscription.">{formatMoney(subsYear / 100, "NGN")}</Num> a year.
-      </Meaning>
-      {items.map((i) => (
-        <Card key={i.merchant}>
-          <CardContent className="flex flex-wrap items-center justify-between gap-2 p-4 text-sm">
-            <div>
-              <p className="font-medium">{i.merchant}</p>
-              <p className="text-xs text-muted-foreground">{i.category} · seen {i.occurrences}× · next around {i.nextDate}</p>
-            </div>
-            <div className="text-right">
-              <p className="tabular-nums">{formatMoney(i.typicalMinor / 100, "NGN")}/mo</p>
-              {i.isSubscription && <p className="text-xs text-warning">Still using it? Cancelling saves {formatMoney(i.annualMinor / 100, "NGN", { compact: true })}/yr</p>}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
   );
 }
 
