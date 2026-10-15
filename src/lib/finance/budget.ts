@@ -12,6 +12,18 @@ export const SPEND_CATEGORIES = CATEGORIES.filter(
 );
 const SPEND = new Set<string>(SPEND_CATEGORIES);
 
+/** Everyday spending that repeats (a weekly shop, a favourite lunch spot) isn't a bill. */
+const EVERYDAY = new Set([
+  "Groceries",
+  "Eating out",
+  "Shopping",
+  "Fuel",
+  "Transport",
+  "Entertainment",
+  "Uncategorised",
+]);
+export const isBill = (category: string) => SPEND.has(category) && !EVERYDAY.has(category);
+
 const ym = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 
 /** This calendar month's spending per category, in the base currency (major units). */
@@ -123,7 +135,7 @@ export function safeToSpend(data: FinanceData, txns: SpendTxn[], today = new Dat
         .map((t) => t.merchant.split(" ").slice(0, 2).join(" ")),
     );
     bills = detectRecurring(txns)
-      .filter((r) => SPEND.has(r.category) && !paidThisMonth.has(r.merchant))
+      .filter((r) => isBill(r.category) && !paidThisMonth.has(r.merchant))
       .filter((r) => r.nextDate >= todayIso && r.nextDate <= endIso)
       .map((r) => ({
         merchant: r.merchant,
@@ -187,7 +199,7 @@ export function upcomingBills(
   );
   const out: UpcomingBill[] = [];
   for (const r of detectRecurring(txns)) {
-    if (!SPEND.has(r.category)) continue;
+    if (!isBill(r.category)) continue;
     const date = new Date(`${r.nextDate}T00:00:00`);
     if (date < start || date > end) continue;
     if (date.getMonth() === today.getMonth() && paidThisMonth.has(r.merchant)) continue;

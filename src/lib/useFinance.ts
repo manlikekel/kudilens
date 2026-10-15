@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { DEMO_USER_ID, demoData } from "@/lib/demo";
 import { actualSpendNGN } from "./finance";
 import type {
   Account,
@@ -142,10 +143,16 @@ export function useLiveAssumptions(userId: string | undefined) {
   });
 }
 
+/** Sample numbers for demo mode, with live market assumptions like a real account. */
+async function loadDemo(): Promise<FinanceData> {
+  const market = await liveMarket();
+  return { ...demoData(), ...(market ? { market } : {}) };
+}
+
 export function useFinance(userId: string | undefined) {
   return useQuery({
     queryKey: ["finance", userId],
-    queryFn: () => loadFinance(userId!),
+    queryFn: () => (userId === DEMO_USER_ID ? loadDemo() : loadFinance(userId!)),
     enabled: !!userId,
   });
 }

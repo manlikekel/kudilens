@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Budgets, SinkingFunds } from "@/components/spending/Budgets";
+import { DEMO_USER_ID, demoTxns } from "@/lib/demo";
 import { BillsHub } from "@/components/spending/BillsHub";
 
 export const Route = createFileRoute("/spending")({
@@ -55,6 +56,10 @@ function SpendingPage() {
     queryKey: ["txns", uid],
     enabled: !!uid,
     queryFn: async () => {
+      if (uid === DEMO_USER_ID)
+        return demoTxns()
+          .map((t, i) => ({ ...t, id: `demo-${i}`, is_recurring: false, account_id: null }))
+          .sort((a, b) => b.txn_date.localeCompare(a.txn_date)) as TxnRow[];
       const { data, error } = await supabase.from("transactions").select("*").eq("user_id", uid).order("txn_date", { ascending: false }).limit(2000);
       if (error) throw new Error(error.message);
       return data as TxnRow[];
@@ -64,6 +69,7 @@ function SpendingPage() {
     queryKey: ["rules", uid],
     enabled: !!uid,
     queryFn: async () => {
+      if (uid === DEMO_USER_ID) return [];
       const { data, error } = await supabase.from("category_rules").select("*").eq("user_id", uid).order("created_at");
       if (error) throw new Error(error.message);
       return data as (CategoryRule & { id: string })[];
@@ -117,7 +123,7 @@ function SpendingPage() {
           <TabsTrigger value="sinking">Sinking funds</TabsTrigger>
           <TabsTrigger value="import">Import</TabsTrigger>
           <TabsTrigger value="transactions">Transactions ({txns.length})</TabsTrigger>
-          <TabsTrigger value="recurring">Bills ({recurring.length})</TabsTrigger>
+          <TabsTrigger value="recurring">Bills</TabsTrigger>
           <TabsTrigger value="rules">Rules ({rules.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="overview"><Overview months={months} usesActual={!!fin?.actualSpend?.months} /></TabsContent>

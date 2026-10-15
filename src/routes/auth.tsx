@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { ResetWithCode, VerifySignup } from "@/components/AuthCodes";
+import { startDemo } from "@/lib/demo";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -175,7 +176,20 @@ function AuthPage() {
           )}
           {(mode === "signin" || mode === "signup") && (
             <>
-              <Button variant="outline" className="mt-6 w-full" onClick={google}>
+              <button
+                type="button"
+                onClick={() => {
+                  startDemo();
+                  navigate({ to: "/" });
+                }}
+                className="mt-5 w-full rounded-xl border border-dashed border-primary/50 bg-primary/5 px-4 py-3 text-left text-sm transition-colors hover:bg-primary/10"
+              >
+                <span className="block font-medium text-primary">Try the demo first</span>
+                <span className="block text-xs text-muted-foreground">
+                  Explore KudiLens with sample numbers. No account needed.
+                </span>
+              </button>
+              <Button variant="outline" className="mt-4 w-full" onClick={google}>
                 <GoogleMark /> Continue with Google
               </Button>
 

@@ -7,6 +7,7 @@ import {
   detectRecurring,
   formatMoney,
   getRates,
+  isBill,
   sinkingFunds,
   type FinanceData,
 } from "@/lib/finance";
@@ -57,7 +58,7 @@ export function BillsHub({
   const toBase = (minor: number) => (rates ? convert(minor / 100, "NGN", cur, rates) : minor / 100);
 
   const subs = items.filter((i) => i.isSubscription);
-  const bills = items.filter((i) => !i.isSubscription);
+  const bills = items.filter((i) => !i.isSubscription && isBill(i.category));
   const debts = (data?.debts ?? []).filter(
     (d) => Number(d.balance) > 0 && Number(d.minimum_payment) > 0,
   );
@@ -65,7 +66,9 @@ export function BillsHub({
 
   const active = (merchant: string) => flags[merchant] !== "cancelled";
   const monthly =
-    items.filter((i) => active(i.merchant)).reduce((t, i) => t + toBase(i.typicalMinor), 0) +
+    [...subs, ...bills]
+      .filter((i) => active(i.merchant))
+      .reduce((t, i) => t + toBase(i.typicalMinor), 0) +
     debts.reduce(
       (t, d) => t + (rates ? convert(Number(d.minimum_payment), d.currency, cur, rates) : 0),
       0,
