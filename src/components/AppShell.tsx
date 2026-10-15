@@ -31,6 +31,7 @@ import { cn } from "@/lib/utils";
 import { useFinance } from "@/lib/useFinance";
 import { useInstall, useOnline } from "@/lib/pwa";
 import { Tour } from "@/components/Tour";
+import { QuickAdd } from "@/components/QuickAdd";
 import { usePrivacy } from "@/lib/privacy";
 import { useAppLock } from "@/lib/applock";
 import { LockScreen, SecondStepScreen, useNeedsSecondStep } from "@/components/Security";
@@ -362,6 +363,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <InstallBanner mode={installMode} onInstall={onInstall} />
       <Tour />
+      <QuickAdd userId={user.id} currency={baseCurrency} />
     </div>
   );
 }
