@@ -11,7 +11,16 @@ import { Input } from "@/components/ui/input";
 import { PasswordHints, PasswordInput, passwordOk } from "@/components/PasswordInput";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { getTheme, isStandalone, setTheme, useInstall, type ThemeChoice } from "@/lib/pwa";
+import {
+  TEXT_SIZES,
+  getTextSize,
+  getTheme,
+  isStandalone,
+  setTextSize,
+  setTheme,
+  useInstall,
+  type ThemeChoice,
+} from "@/lib/pwa";
 import { cn } from "@/lib/utils";
 import { CountrySelect } from "@/components/CountrySelect";
 import { AppLockSettings, TwoStepSettings } from "@/components/SecuritySettings";
@@ -109,7 +118,11 @@ function Settings() {
 
 function Appearance() {
   const [choice, setChoice] = useState<ThemeChoice>("system");
-  useEffect(() => setChoice(getTheme()), []);
+  const [size, setSize] = useState("100%");
+  useEffect(() => {
+    setChoice(getTheme());
+    setSize(getTextSize());
+  }, []);
   const options: { value: ThemeChoice; label: string; icon: typeof Sun }[] = [
     { value: "system", label: "Device", icon: Monitor },
     { value: "light", label: "Light", icon: Sun },
@@ -138,6 +151,27 @@ function Appearance() {
           >
             <o.icon className="size-5" />
             {o.label}
+          </button>
+        ))}
+      </div>
+      <p className="mt-5 text-sm font-medium">Text size</p>
+      <div role="radiogroup" aria-label="Text size" className="mt-2 grid grid-cols-3 gap-2">
+        {TEXT_SIZES.map((t) => (
+          <button
+            key={t.value}
+            role="radio"
+            aria-checked={size === t.value}
+            onClick={() => {
+              setTextSize(t.value);
+              setSize(t.value);
+            }}
+            className={cn(
+              "rounded-xl border border-border px-3 py-3 font-medium transition-colors hover:bg-accent",
+              size === t.value && "border-primary bg-primary/10 text-primary",
+            )}
+            style={{ fontSize: `calc(0.875rem * ${parseFloat(t.value) / 100})` }}
+          >
+            {t.label}
           </button>
         ))}
       </div>

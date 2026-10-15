@@ -10,7 +10,35 @@ const THEME_COLOR = { light: "#f6f7fa", dark: "#0c111d" };
  * Runs inline in <head> before first paint so the saved theme never flashes, and keeps the
  * install-prompt event if the browser fires it before React mounts.
  */
-export const bootScript = `(function(){try{var t=localStorage.getItem("${THEME_KEY}");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}catch(e){}window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__kudiInstall=e;});})();`;
+/* ---------------- text size ---------------- */
+
+const TEXT_KEY = "kudi-text-size";
+export const TEXT_SIZES = [
+  { value: "100%", label: "Normal" },
+  { value: "112.5%", label: "Large" },
+  { value: "125%", label: "Larger" },
+] as const;
+
+export function getTextSize(): string {
+  try {
+    return localStorage.getItem(TEXT_KEY) ?? "100%";
+  } catch {
+    return "100%";
+  }
+}
+
+/** Scales the whole app (every size is in rem) and remembers it on this device. */
+export function setTextSize(size: string) {
+  document.documentElement.style.fontSize = size === "100%" ? "" : size;
+  try {
+    if (size === "100%") localStorage.removeItem(TEXT_KEY);
+    else localStorage.setItem(TEXT_KEY, size);
+  } catch {
+    /* still applies for this visit */
+  }
+}
+
+export const bootScript = `(function(){try{var t=localStorage.getItem("${THEME_KEY}");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;var z=localStorage.getItem("${TEXT_KEY}");if(z)document.documentElement.style.fontSize=z;}catch(e){}window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__kudiInstall=e;});})();`;
 
 export function getTheme(): ThemeChoice {
   try {
