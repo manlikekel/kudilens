@@ -30,7 +30,10 @@ export function QuickAdd({ userId, currency }: { userId: string; currency: strin
 
   const save = async () => {
     const n = Number(amount.replace(/,/g, ""));
-    if (!(n > 0)) return toast.error("Enter an amount above zero");
+    if (!(n > 0)) {
+      toast.error("Enter an amount above zero");
+      return;
+    }
     setSaving(true);
     const minor = Math.round(n * 100) * (kind === "received" ? 1 : -1);
     const { error } = await supabase.from("transactions").insert({
@@ -45,7 +48,10 @@ export function QuickAdd({ userId, currency }: { userId: string; currency: strin
       dedupe_key: `manual-${crypto.randomUUID()}`,
     });
     setSaving(false);
-    if (error) return toast.error("Couldn't save: " + error.message);
+    if (error) {
+      toast.error("Could not save: " + error.message);
+      return;
+    }
     toast.success("Added");
     setAmount("");
     setNote("");
